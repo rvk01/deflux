@@ -1,19 +1,33 @@
 package main
 
 import (
+	"flag"
 	"fmt"
-	"log"
 	"time"
 
 	"github.com/fixje/deflux/config"
 	"github.com/fixje/deflux/deconz"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
+	log "github.com/sirupsen/logrus"
 )
 
 func main() {
+	flagLoglevel := flag.String("loglevel", "warning", "debug | error | warning | info")
+	flag.Parse()
+
+	level, err := log.ParseLevel(*flagLoglevel)
+	if err != nil {
+		log.SetLevel(log.InfoLevel)
+	} else {
+		log.SetLevel(level)
+	}
+	log.SetFormatter(&log.TextFormatter{
+		FullTimestamp: true,
+	})
+
 	cfg, err := config.LoadConfiguration()
 	if err != nil {
-		log.Printf("no configuration could be found: %s", err)
+		log.Errorf("no configuration could be found: %s", err)
 		config.OutputDefaultConfiguration()
 		return
 	}
@@ -23,7 +37,7 @@ func main() {
 		panic(err)
 	}
 
-	log.Printf("Connected to deCONZ at %s", cfg.Deconz.Addr)
+	log.Infof("Connected to deCONZ at %s", cfg.Deconz.Addr)
 
 	influxClient := influxdb2.NewClientWithOptions(
 		cfg.InfluxDB.Url,
@@ -48,9 +62,11 @@ func main() {
 		case sensorEvent := <-sensorChan:
 			tags, fields, err := sensorEvent.Timeseries()
 			if err != nil {
-				log.Printf("not adding event to influx batch: %s", err)
+				log.Warningf("not adding event to influx: %s", err)
 				continue
 			}
+
+			log.Debugf("Writing point for sensor %s, tags = %v, fields = %v", sensorEvent.Sensor.Type, tags, fields)
 
 			writeAPI.WritePoint(influxdb2.NewPoint(
 				fmt.Sprintf("deflux_%s", sensorEvent.Sensor.Type),

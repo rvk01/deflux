@@ -3,9 +3,8 @@ package event
 import (
 	"errors"
 	"fmt"
-	"log"
-
 	"github.com/gorilla/websocket"
+	log "github.com/sirupsen/logrus"
 )
 
 // Reader represents a deconz server device
@@ -61,7 +60,7 @@ func (r *Reader) ReadEvent() (*Event, error) {
 		return nil, fmt.Errorf("event read error: %s", err)
 	}
 
-	log.Printf("recv: %s", message)
+	log.Debugf("recv: %s", message)
 
 	e, err := r.decoder.Parse(message)
 	if err != nil {

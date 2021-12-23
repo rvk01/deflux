@@ -3,9 +3,9 @@ package config
 import (
 	"fmt"
 	"github.com/fixje/deflux/deconz"
+	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
-	"log"
 	"net/url"
 	"os"
 	"path"
@@ -52,7 +52,7 @@ func readConfiguration() ([]byte, error) {
 	pwdPath := path.Join(pwd, YmlFileName)
 	data, pwdErr := ioutil.ReadFile(pwdPath)
 	if pwdErr == nil {
-		log.Printf("Using configuration %s", pwdPath)
+		log.Infof("Using configuration %s", pwdPath)
 		return data, nil
 	}
 
@@ -64,7 +64,7 @@ func readConfiguration() ([]byte, error) {
 		return nil, fmt.Errorf("\n%s\n%s", pwdErr, etcErr)
 	}
 
-	log.Printf("Using configuration %s", etcPath)
+	log.Infof("Using configuration %s", etcPath)
 	return data, nil
 }
 
@@ -77,7 +77,7 @@ func OutputDefaultConfiguration() {
 	if err == nil {
 		apikey, err := deconz.Pair(*u)
 		if err != nil {
-			log.Printf("unable to pair with deconz: %s, please fill out APIKey manually", err)
+			log.Errorf("unable to pair with deconz: %s, please fill out APIKey manually", err)
 		}
 		c.Deconz.APIKey = string(apikey)
 	}
@@ -89,7 +89,7 @@ func OutputDefaultConfiguration() {
 		log.Fatalf("unable to generate default configuration: %s", err)
 	}
 
-	log.Printf("Outputting default configuration, save this to /etc/deflux.yml")
+	log.Warning("Outputting default configuration, save this to /etc/deflux.yml")
 	// to stdout
 	fmt.Print(string(yml))
 }
@@ -113,7 +113,7 @@ func defaultConfiguration() *Configuration {
 	// default congfiguration
 	discovered, err := deconz.Discover()
 	if err != nil {
-		log.Printf("discovery of deconz gateway failed: %s, please fill configuration manually..", err)
+		log.Errorf("discovery of deconz gateway failed: %s, please fill configuration manually..", err)
 		return &c
 	}
 

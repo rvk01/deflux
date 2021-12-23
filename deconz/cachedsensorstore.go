@@ -3,7 +3,7 @@ package deconz
 import (
 	"errors"
 	"fmt"
-	"log"
+	log "github.com/sirupsen/logrus"
 )
 
 // CachedSensorStore is a cached typestore which provides LookupType for event passing
@@ -61,7 +61,7 @@ func (c *CachedSensorStore) populateCache() error {
 		return err
 	}
 
-	log.Printf("SensorStore updated, found %d sensors", len((*c.cache)))
+	log.Infof("SensorStore updated, found %d sensors", len((*c.cache)))
 
 	return nil
 }

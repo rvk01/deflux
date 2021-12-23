@@ -2,10 +2,9 @@ package deconz
 
 import (
 	"errors"
-	"log"
-	"time"
-
 	"github.com/fixje/deflux/deconz/event"
+	log "github.com/sirupsen/logrus"
+	"time"
 )
 
 // SensorLookup represents an interface for sensor lookup
@@ -51,10 +50,10 @@ func (r *SensorEventReader) Start(out chan *SensorEvent) error {
 			for r.running {
 				err := r.reader.Dial()
 				if err != nil {
-					log.Printf("Error connecting Deconz websocket: %s\nAttempting reconnect in 5s...", err)
+					log.Errorf("Error connecting Deconz websocket: %s\nAttempting reconnect in 5s...", err)
 					time.Sleep(5 * time.Second) // TODO configurable delay
 				} else {
-					log.Printf("Deconz websocket connected")
+					log.Infof("Deconz websocket connected")
 					break
 				}
 			}
@@ -63,20 +62,20 @@ func (r *SensorEventReader) Start(out chan *SensorEvent) error {
 				e, err := r.reader.ReadEvent()
 				if err != nil {
 					if eerr, ok := err.(event.EventError); ok && eerr.Recoverable() {
-						log.Printf("Dropping event due to error: %s", err)
+						log.Errorf("Dropping event due to error: %s", err)
 						continue
 					}
 					continue REDIAL
 				}
 				// we only care about sensor events
 				if e.Resource != "sensors" {
-					log.Printf("Dropping non-sensor event type %s", e.Resource)
+					log.Debugf("Dropping non-sensor event type %s", e.Resource)
 					continue
 				}
 
 				sensor, err := r.lookup.LookupSensor(e.ID)
 				if err != nil {
-					log.Printf("Dropping event. Could not lookup sensor for id %d: %s", e.ID, err)
+					log.Warningf("Dropping event. Could not lookup sensor for id %d: %s", e.ID, err)
 					continue
 				}
 				// send event on channel
@@ -84,8 +83,12 @@ func (r *SensorEventReader) Start(out chan *SensorEvent) error {
 			}
 		}
 		// if not running, close connection and return from goroutine
-		r.reader.Close()
-		log.Printf("Deconz websocket closed")
+		err := r.reader.Close()
+		if err != nil {
+			log.Error("Failed to close websocket", err)
+			return
+		}
+		log.Infof("Deconz websocket closed")
 	}()
 	return nil
 }
