@@ -16,14 +16,13 @@ type Reader struct {
 	conn          *websocket.Conn
 }
 
-
 type EventError interface {
 	error
 	Recoverable() bool
 }
 
 type EventErrorImpl struct {
-	errStr string
+	errStr      string
 	recoverable bool
 }
 

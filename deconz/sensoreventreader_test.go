@@ -28,10 +28,10 @@ func (t testReader) ReadEvent() (*event.Event, error) {
 	return d.Parse([]byte(smokeDetectorNoFireEventPayload))
 }
 func (t testReader) Dial() error {
-	return nil;
+	return nil
 }
 func (t testReader) Close() error {
-	return nil;
+	return nil
 }
 func TestSensorEventReader(t *testing.T) {
 

@@ -267,19 +267,19 @@ func (z *CLIPPresence) Fields() map[string]interface{} {
 // ZHALightLevel represents a LightLevel Sensor
 type ZHALightLevel struct {
 	State
-	Dark bool
-	Daylight bool
+	Dark       bool
+	Daylight   bool
 	LightLevel int32
-	Lux int16
+	Lux        int16
 }
 
 // Fields returns timeseries data for influxdb
 func (z *ZHALightLevel) Fields() map[string]interface{} {
 	return map[string]interface{}{
-		"daylight": z.Daylight,
-		"dark": z.Dark,
+		"daylight":   z.Daylight,
+		"dark":       z.Dark,
 		"lightlevel": z.LightLevel,
-		"lux": z.Lux,
+		"lux":        z.Lux,
 	}
 }
 
@@ -313,17 +313,17 @@ func (z *ZHAOpenClose) Fields() map[string]interface{} {
 type ZHACarbonMonoxide struct {
 	State
 	Carbonmonoxide bool
-	Lowbattery bool
-	Tampered bool
+	Lowbattery     bool
+	Tampered       bool
 }
 
 // Fields returns timeseries data for influxdb
 func (z *ZHACarbonMonoxide) Fields() map[string]interface{} {
 	return map[string]interface{}{
-		"CO": z.Carbonmonoxide,
+		"CO":         z.Carbonmonoxide,
 		"lowbattery": z.Lowbattery,
-		"tampered": z.Tampered,
-		}
+		"tampered":   z.Tampered,
+	}
 }
 
 // EmptyState is an empty struct used to indicate no state was parsed
