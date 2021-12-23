@@ -10,18 +10,24 @@ import (
 	"time"
 
 	"github.com/fixje/deflux/deconz"
-	client "github.com/influxdata/influxdb1-client/v2"
+	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	yaml "gopkg.in/yaml.v2"
 )
 
 // YmlFileName is the filename
 const YmlFileName = "deflux.yml"
 
+type InfluxConfig struct {
+	Url    string
+	Token  string
+	Org    string
+	Bucket string
+}
+
 // Configuration holds data for Deconz and influxdb configuration
 type Configuration struct {
-	Deconz           deconz.Config
-	Influxdb         client.HTTPConfig
-	InfluxdbDatabase string
+	Deconz       deconz.Config
+	InfluxConfig InfluxConfig
 }
 
 func main() {
@@ -39,24 +45,22 @@ func main() {
 
 	log.Printf("Connected to deCONZ at %s", config.Deconz.Addr)
 
-	// initial influx batch
-	batch, err := client.NewBatchPoints(client.BatchPointsConfig{
-		Database:  config.InfluxdbDatabase,
-		Precision: "s",
-	})
+	influxClient := influxdb2.NewClientWithOptions(
+		config.InfluxConfig.Url,
+		config.InfluxConfig.Token,
+		influxdb2.DefaultOptions().SetBatchSize(20))
 
-	if err != nil {
-		panic(err)
-	}
+	// Get non-blocking write client
+	writeAPI := influxClient.WriteAPI(config.InfluxConfig.Bucket, config.InfluxConfig.Bucket)
+	// Get errors channel
+	errorsCh := writeAPI.Errors()
 
-	//TODO: figure out how to create a timer that is stopped
-	timeout := time.NewTimer(1 * time.Second)
-	timeout.Stop()
-
-	influxdb, err := client.NewHTTPClient(config.Influxdb)
-	if err != nil {
-		panic(err)
-	}
+	// Create go proc for reading and logging errors
+	go func() {
+		for err := range errorsCh {
+			fmt.Printf("write error: %s\n", err.Error())
+		}
+	}()
 
 	for {
 
@@ -68,35 +72,20 @@ func main() {
 				continue
 			}
 
-			pt, err := client.NewPoint(
+			writeAPI.WritePoint(influxdb2.NewPoint(
 				fmt.Sprintf("deflux_%s", sensorEvent.Sensor.Type),
 				tags,
 				fields,
 				time.Now(), // TODO: we should use the time associated with the event...
-			)
+			))
 
-			if err != nil {
-				panic(err)
-			}
-
-			batch.AddPoint(pt)
-			timeout.Reset(1 * time.Second)
-
-		case <-timeout.C:
-			// when timer fires: save batch points, initialize a new batch
-			err := influxdb.Write(batch)
-			if err != nil {
-				panic(err)
-			}
-
-			log.Printf("Saved %d records to influxdb", len(batch.Points()))
-			// influx batch point
-			batch, err = client.NewBatchPoints(client.BatchPointsConfig{
-				Database:  config.InfluxdbDatabase,
-				Precision: "s",
-			})
 		}
 	}
+
+	// Force all unwritten data to be sent
+	writeAPI.Flush()
+	// Ensures background processes finishes
+	influxClient.Close()
 }
 
 func sensorEventChan(c deconz.Config) (chan *deconz.SensorEvent, error) {
@@ -163,16 +152,6 @@ func readConfiguration() ([]byte, error) {
 	return data, nil
 }
 
-// influxdbConfigProxy proxies client.HTTPConfig into a yml capable
-// struct, its only used for encoding to yml as the yml package
-// have no problem skipping the Proxy field when decoding
-type influxdbConfigProxy struct {
-	Addr      string
-	Username  string
-	Password  string
-	UserAgent string
-}
-
 func outputDefaultConfiguration() {
 
 	c := defaultConfiguration()
@@ -187,22 +166,9 @@ func outputDefaultConfiguration() {
 		c.Deconz.APIKey = string(apikey)
 	}
 
-	// we need to use a proxy struct to encode yml as the influxdb client configuration struct
+	// we need to use a proxy struct to encode yml as the influxdb influxdb2 configuration struct
 	// includes a Proxy: func() field that the yml encoder cannot handle
-	yml, err := yaml.Marshal(struct {
-		Deconz           deconz.Config
-		Influxdb         influxdbConfigProxy
-		InfluxdbDatabase string
-	}{
-		Deconz: c.Deconz,
-		Influxdb: influxdbConfigProxy{
-			Addr:      c.Influxdb.Addr,
-			Username:  c.Influxdb.Username,
-			Password:  c.Influxdb.Password,
-			UserAgent: c.Influxdb.UserAgent,
-		},
-		InfluxdbDatabase: c.InfluxdbDatabase,
-	})
+	yml, err := yaml.Marshal(c)
 	if err != nil {
 		log.Fatalf("unable to generate default configuration: %s", err)
 	}
@@ -219,13 +185,12 @@ func defaultConfiguration() *Configuration {
 			Addr:   "http://127.0.0.1:8080/",
 			APIKey: "change me",
 		},
-		Influxdb: client.HTTPConfig{
-			Addr:      "http://127.0.0.1:8086/",
-			Username:  "change me",
-			Password:  "change me",
-			UserAgent: "Deflux",
+		InfluxConfig: InfluxConfig{
+			Url:    "http://localhost:8086",
+			Token:  "SECRET",
+			Org:    "organization",
+			Bucket: "default",
 		},
-		InfluxdbDatabase: "deconz",
 	}
 
 	// lets see if we are able to discover a gateway, and overwrite parts of the

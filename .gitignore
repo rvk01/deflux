@@ -1,2 +1,4 @@
 deflux.yml
 deflux
+*.iml
+.idea/
