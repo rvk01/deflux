@@ -45,6 +45,7 @@ func TestMain(m *testing.M) {
 	}}}
 	os.Exit(m.Run())
 }
+
 func TestSmokeDetectorNoFireEvent(t *testing.T) {
 	result, err := decoder.Parse([]byte(smokeDetectorNoFireEventPayload))
 	if err != nil {
@@ -52,7 +53,7 @@ func TestSmokeDetectorNoFireEvent(t *testing.T) {
 		t.FailNow()
 	}
 
-	smokeDetectorEvent, success := result.State.(ZHAFire)
+	smokeDetectorEvent, success := result.State.(*ZHAFire)
 	if !success {
 		t.Log("unable to type assert smoke detector event")
 		t.FailNow()
@@ -71,7 +72,7 @@ func TestFloodDetectorEvent(t *testing.T) {
 		t.FailNow()
 	}
 
-	floodEvent, success := result.State.(ZHAWater)
+	floodEvent, success := result.State.(*ZHAWater)
 	if !success {
 		t.Log("Unable to type assert floodevent")
 		t.FailNow()
@@ -91,7 +92,7 @@ func TestPressureEvent(t *testing.T) {
 		t.FailNow()
 	}
 
-	pressure, success := result.State.(ZHAPressure)
+	pressure, success := result.State.(*ZHAPressure)
 	if !success {
 		t.Log("Coudl not assert to pressureevent")
 		t.FailNow()
@@ -110,7 +111,7 @@ func TestTemperatureEvent(t *testing.T) {
 		t.FailNow()
 	}
 
-	temp, success := result.State.(ZHATemperature)
+	temp, success := result.State.(*ZHATemperature)
 	if !success {
 		t.Logf("Could not assert to temperature event")
 		t.FailNow()
@@ -129,7 +130,7 @@ func TestHumidityEvent(t *testing.T) {
 		t.FailNow()
 	}
 
-	humidity, success := result.State.(ZHAHumidity)
+	humidity, success := result.State.(*ZHAHumidity)
 	if !success {
 		t.Logf("unable assert humidity event")
 		t.FailNow()
@@ -148,7 +149,7 @@ func TestSwitchEvent(t *testing.T) {
 		t.FailNow()
 	}
 
-	s, success := result.State.(ZHASwitch)
+	s, success := result.State.(*ZHASwitch)
 	if !success {
 		t.Logf("unable assert switch event")
 		t.FailNow()
