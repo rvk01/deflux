@@ -27,8 +27,8 @@ First run generates a sample configuration:
 
 ```
 $ deflux
-ERRO[2021-12-26T11:28:03+01:00] no configuration could be found: could not read configuration: 
-open /home/fixje/sync/markus/hacks/home-server/deflux.yml: no such file or directory
+ERRO[2021-12-26T11:28:03+01:00] no configuration could be found: could not read configuration:
+open /home/fixje/hacks/deflux/deflux.yml: no such file or directory
 open /etc/deflux.yml: no such file or directory 
 ERRO[2021-12-26T11:28:03+01:00] unable to pair with deconz: unable to pair with deconz: link button not pressed, please fill out APIKey manually 
 WARN[2021-12-26T11:28:03+01:00] Outputting default configuration, save this to /etc/deflux.yml 
@@ -48,7 +48,7 @@ The default log level of the application is `warning`. You can set the
 
 ```
 $ ./deflux -loglevel=debug
-INFO[2021-12-26T11:29:15+01:00] Using configuration /home/fixje/sync/markus/hacks/home-server/deflux/deflux.yml 
+INFO[2021-12-26T11:29:15+01:00] Using configuration /home/fixje/hacks/deflux/deflux.yml
 INFO[2021-12-26T11:29:15+01:00] Connected to deCONZ at http://172.26.0.2:80/api 
 INFO[2021-12-26T11:29:15+01:00] Deconz websocket connected
 ```
@@ -84,12 +84,13 @@ Table: keys: []
 ```
 $ influx query --org YOUR_ORG << EOF
 import "influxdata/influxdb/schema"
-> 
-> schema.measurementTagKeys(
->   bucket: "YOUR_BUCKET",
->   measurement: "deflux_ZHATemperature"
-> )
-> EOF
+
+schema.measurementTagKeys(
+  bucket: "YOUR_BUCKET",
+  measurement: "deflux_ZHATemperature"
+)
+
+EOF
 Result: _result
 Table: keys: []
          _value:string
@@ -128,6 +129,11 @@ Table: keys: [name]
          th-sz  2021-12-27T07:04:04.025135987Z                 17.94
 ...
 ```
+
+InfluxDB 2 has a nice query builder that will help you creating Flux queries.
+Visit InfluxDB's web interface, log in, and click "Explore" in the navigation
+bar.
+
 
 ## Development
 
