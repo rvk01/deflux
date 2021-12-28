@@ -1,4 +1,4 @@
-package event
+package sensor
 
 // ZHALightLevel represents a LightLevel Sensor
 type ZHALightLevel struct {

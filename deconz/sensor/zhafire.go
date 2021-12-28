@@ -1,18 +1,18 @@
-package event
+package sensor
 
-// ZHAWater respresents a change from a flood sensor
-type ZHAWater struct {
+// ZHAFire represents a change from a smoke detector
+type ZHAFire struct {
 	State
+	Fire       bool
 	Lowbattery bool
 	Tampered   bool
-	Water      bool
 }
 
 // Fields returns timeseries data for influxdb
-func (z *ZHAWater) Fields() map[string]interface{} {
+func (z *ZHAFire) Fields() map[string]interface{} {
 	return map[string]interface{}{
 		"lowbattery": z.Lowbattery,
 		"tampered":   z.Tampered,
-		"water":      z.Water,
+		"fire":       z.Fire,
 	}
 }

@@ -1,4 +1,4 @@
-package event
+package sensor
 
 // ZHAPressure represents a presure change
 type ZHAPressure struct {

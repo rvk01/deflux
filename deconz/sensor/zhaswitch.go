@@ -1,4 +1,4 @@
-package event
+package sensor
 
 // ZHASwitch represents a change from a button or switch
 type ZHASwitch struct {

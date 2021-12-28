@@ -1,4 +1,4 @@
-package event
+package sensor
 
 // ZHAConsumption represents a power consumption sensor
 type ZHAConsumption struct {

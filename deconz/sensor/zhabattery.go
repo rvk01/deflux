@@ -1,4 +1,4 @@
-package event
+package sensor
 
 // ZHABattery represents the battery state of a device
 type ZHABattery struct {

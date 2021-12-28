@@ -1,4 +1,4 @@
-package event
+package deconz
 
 import (
 	"errors"
@@ -10,34 +10,17 @@ import (
 // WsReader holds a deCONZ websocket server connection
 // It implements the deconz.EventReader interface
 type WsReader struct {
-	WebsocketAddr  string
-	TypeRepository TypeRepository
-	decoder        *Decoder
-	conn           *websocket.Conn
-}
-
-type EventError struct {
-	error
-	recoverable bool
-}
-
-func NewEventError(err error, recoverable bool) EventError {
-	return EventError{err, recoverable}
-}
-
-func (e EventError) Recoverable() bool {
-	return e.recoverable
+	WebsocketAddr string
+	sensorInfo    SensorInfoProvider
+	conn          *websocket.Conn
 }
 
 // Dial connects connects to the deCONZ websocket, use ReadEvent to receive events
 func (r *WsReader) Dial() error {
 
-	if r.TypeRepository == nil {
-		return errors.New("cannot dial without a TypeRepository to lookup events from")
+	if r.sensorInfo == nil {
+		return errors.New("cannot dial without a sensorInfo to lookup events from")
 	}
-
-	// create a decoder with the typestore
-	r.decoder = &Decoder{TypeRepository: r.TypeRepository}
 
 	// connect
 	var err error
@@ -58,7 +41,7 @@ func (r *WsReader) ReadEvent() (*Event, error) {
 
 	log.Debugf("recv: %s", message)
 
-	e, err := r.decoder.Parse(message)
+	e, err := ParseEvent(r.sensorInfo, message)
 	if err != nil {
 		return nil, NewEventError(fmt.Errorf("unable to parse message: %s", err), true)
 	}

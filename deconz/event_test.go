@@ -1,7 +1,8 @@
-package event
+package deconz
 
 import (
 	"errors"
+	"github.com/fixje/deflux/deconz/sensor"
 	"os"
 	"testing"
 )
@@ -24,36 +25,48 @@ type LookupImpl struct {
 	Store map[int]string
 }
 
-func (l *LookupImpl) LookupType(i int) (string, error) {
+func (l LookupImpl) LookupSensor(i int) (*Sensor, error) {
+	if _, ok := l.Store[i]; ok {
+		// FIXME
+		return nil, nil
+	}
+	return nil, errors.New("not found")
+}
+
+func (l LookupImpl) LookupType(i int) (string, error) {
 	if t, ok := l.Store[i]; ok {
 		return t, nil
 	}
 	return "", errors.New("not found")
 }
 
-var decoder Decoder
+func (l LookupImpl) Sensors() (*Sensors, error) {
+	return nil, nil
+}
+
+var sensorInfo SensorInfoProvider
 
 func TestMain(m *testing.M) {
 
-	decoder = Decoder{TypeRepository: &LookupImpl{Store: map[int]string{
+	sensorInfo = LookupImpl{Store: map[int]string{
 		1: "ZHATemperature",
 		2: "ZHAHumidity",
 		3: "ZHAPressure",
 		5: "ZHAFire",
 		6: "ZHAWater",
 		7: "ZHASwitch",
-	}}}
+	}}
 	os.Exit(m.Run())
 }
 
 func TestSmokeDetectorNoFireEvent(t *testing.T) {
-	result, err := decoder.Parse([]byte(smokeDetectorNoFireEventPayload))
+	result, err := ParseEvent(sensorInfo, []byte(smokeDetectorNoFireEventPayload))
 	if err != nil {
 		t.Logf("unable to unmarshal smoke detector event: %s", err)
 		t.FailNow()
 	}
 
-	smokeDetectorEvent, success := result.State.(*ZHAFire)
+	smokeDetectorEvent, success := result.State.(*sensor.ZHAFire)
 	if !success {
 		t.Log("unable to type assert smoke detector event")
 		t.FailNow()
@@ -66,13 +79,13 @@ func TestSmokeDetectorNoFireEvent(t *testing.T) {
 
 func TestFloodDetectorEvent(t *testing.T) {
 
-	result, err := decoder.Parse([]byte(floodDetectorFloodDetectedEventPayload))
+	result, err := ParseEvent(sensorInfo, []byte(floodDetectorFloodDetectedEventPayload))
 	if err != nil {
 		t.Logf("Could not parse flood detector event: %s", err)
 		t.FailNow()
 	}
 
-	floodEvent, success := result.State.(*ZHAWater)
+	floodEvent, success := result.State.(*sensor.ZHAWater)
 	if !success {
 		t.Log("Unable to type assert floodevent")
 		t.FailNow()
@@ -86,13 +99,13 @@ func TestFloodDetectorEvent(t *testing.T) {
 
 func TestPressureEvent(t *testing.T) {
 
-	result, err := decoder.Parse([]byte(pressureEventPayload))
+	result, err := ParseEvent(sensorInfo, []byte(pressureEventPayload))
 	if err != nil {
 		t.Logf("Could not parse pressure: %s", err)
 		t.FailNow()
 	}
 
-	pressure, success := result.State.(*ZHAPressure)
+	pressure, success := result.State.(*sensor.ZHAPressure)
 	if !success {
 		t.Log("Coudl not assert to pressureevent")
 		t.FailNow()
@@ -105,13 +118,13 @@ func TestPressureEvent(t *testing.T) {
 
 func TestTemperatureEvent(t *testing.T) {
 
-	result, err := decoder.Parse([]byte(temperatureEventPayload))
+	result, err := ParseEvent(sensorInfo, []byte(temperatureEventPayload))
 	if err != nil {
 		t.Logf("Could not parse temperature: %s", err)
 		t.FailNow()
 	}
 
-	temp, success := result.State.(*ZHATemperature)
+	temp, success := result.State.(*sensor.ZHATemperature)
 	if !success {
 		t.Logf("Could not assert to temperature event")
 		t.FailNow()
@@ -124,13 +137,13 @@ func TestTemperatureEvent(t *testing.T) {
 
 func TestHumidityEvent(t *testing.T) {
 
-	result, err := decoder.Parse([]byte(humidityEventPayload))
+	result, err := ParseEvent(sensorInfo, []byte(humidityEventPayload))
 	if err != nil {
 		t.Logf("Could not parse humidity: %s", err)
 		t.FailNow()
 	}
 
-	humidity, success := result.State.(*ZHAHumidity)
+	humidity, success := result.State.(*sensor.ZHAHumidity)
 	if !success {
 		t.Logf("unable assert humidity event")
 		t.FailNow()
@@ -143,13 +156,13 @@ func TestHumidityEvent(t *testing.T) {
 
 func TestSwitchEvent(t *testing.T) {
 
-	result, err := decoder.Parse([]byte(switchSensorEventPayload))
+	result, err := ParseEvent(sensorInfo, []byte(switchSensorEventPayload))
 	if err != nil {
 		t.Logf("Could not parse switch event: %s", err)
 		t.FailNow()
 	}
 
-	s, success := result.State.(*ZHASwitch)
+	s, success := result.State.(*sensor.ZHASwitch)
 	if !success {
 		t.Logf("unable assert switch event")
 		t.FailNow()

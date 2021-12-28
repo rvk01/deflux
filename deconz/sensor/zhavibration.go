@@ -1,4 +1,4 @@
-package event
+package sensor
 
 // ZHAVibration represents a Vibration Sensor
 type ZHAVibration struct {

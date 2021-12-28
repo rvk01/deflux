@@ -1,4 +1,4 @@
-package event
+package sensor
 
 // ZHAAirQuality represents a Air Quality Sensor
 type ZHAAirQuality struct {

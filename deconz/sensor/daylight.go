@@ -1,4 +1,4 @@
-package event
+package sensor
 
 // Daylight represents a change in daylight
 type Daylight struct {

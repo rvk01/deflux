@@ -1,4 +1,4 @@
-package event
+package sensor
 
 // ZHAPresence represents a presence Sensor
 type ZHAPresence struct {

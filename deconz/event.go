@@ -1,14 +1,10 @@
-package event
+package deconz
 
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/fixje/deflux/deconz/sensor"
 )
-
-// TypeRepository provides event types by sensor ID
-type TypeRepository interface {
-	LookupType(int) (string, error)
-}
 
 // Event represents a deconz sensor event
 type Event struct {
@@ -20,13 +16,8 @@ type Event struct {
 	State    interface{}
 }
 
-// Decoder is able to decode deCONZ events
-type Decoder struct {
-	TypeRepository TypeRepository
-}
-
-// Parse parses events from bytes
-func (d *Decoder) Parse(b []byte) (*Event, error) {
+// ParseEvent parses events from bytes
+func ParseEvent(si SensorInfoProvider, b []byte) (*Event, error) {
 	var e Event
 	err := json.Unmarshal(b, &e)
 	if err != nil {
@@ -37,11 +28,11 @@ func (d *Decoder) Parse(b []byte) (*Event, error) {
 	// TODO: figure out what to do with these
 	//       some of them seems to be battery updates
 	if e.Resource != "sensors" || len(e.RawState) == 0 {
-		e.State = &EmptyState{}
+		e.State = &sensor.EmptyState{}
 		return &e, nil
 	}
 
-	err = e.ParseState(d.TypeRepository)
+	err = e.ParseState(si)
 	if err != nil {
 		return nil, fmt.Errorf("unable to unmarshal state: %s", err)
 	}
@@ -50,8 +41,8 @@ func (d *Decoder) Parse(b []byte) (*Event, error) {
 }
 
 // ParseState tries to unmarshal the appropriate state based
-// on looking up the id though the TypeRepository
-func (e *Event) ParseState(tl TypeRepository) error {
+// on looking up the id though the SensorInfoProvider
+func (e *Event) ParseState(tl SensorInfoProvider) error {
 
 	t, err := tl.LookupType(e.ID)
 	if err != nil {
@@ -60,87 +51,87 @@ func (e *Event) ParseState(tl TypeRepository) error {
 
 	switch t {
 	case "CLIPPresence":
-		var s CLIPPresence
+		var s sensor.CLIPPresence
 		err = json.Unmarshal(e.RawState, &s)
 		e.State = &s
 		break
 	case "Daylight":
-		var s Daylight
+		var s sensor.Daylight
 		err = json.Unmarshal(e.RawState, &s)
 		e.State = &s
 		break
 	case "ZHAAirQuality":
-		var s ZHAAirQuality
+		var s sensor.ZHAAirQuality
 		err = json.Unmarshal(e.RawState, &s)
 		e.State = &s
 		break
 	case "ZHABattery":
-		var s ZHABattery
+		var s sensor.ZHABattery
 		err = json.Unmarshal(e.RawState, &s)
 		e.State = &s
 		break
 	case "ZHACarbonMonoxide":
-		var s ZHACarbonMonoxide
+		var s sensor.ZHACarbonMonoxide
 		err = json.Unmarshal(e.RawState, &s)
 		e.State = &s
 		break
 	case "ZHAConsumption":
-		var s ZHAConsumption
+		var s sensor.ZHAConsumption
 		err = json.Unmarshal(e.RawState, &s)
 		e.State = &s
 		break
 	case "ZHAFire":
-		var s ZHAFire
+		var s sensor.ZHAFire
 		err = json.Unmarshal(e.RawState, &s)
 		e.State = &s
 		break
 	case "ZHAHumidity":
-		var s ZHAHumidity
+		var s sensor.ZHAHumidity
 		err = json.Unmarshal(e.RawState, &s)
 		e.State = &s
 		break
 	case "ZHALightLevel":
-		var s ZHALightLevel
+		var s sensor.ZHALightLevel
 		err = json.Unmarshal(e.RawState, &s)
 		e.State = &s
 		break
 	case "ZHAOpenClose":
-		var s ZHAOpenClose
+		var s sensor.ZHAOpenClose
 		err = json.Unmarshal(e.RawState, &s)
 		e.State = &s
 		break
 	case "ZHAPower":
-		var s ZHAPower
+		var s sensor.ZHAPower
 		err = json.Unmarshal(e.RawState, &s)
 		e.State = &s
 		break
 	case "ZHAPresence":
-		var s ZHAPresence
+		var s sensor.ZHAPresence
 		err = json.Unmarshal(e.RawState, &s)
 		e.State = &s
 		break
 	case "ZHAPressure":
-		var s ZHAPressure
+		var s sensor.ZHAPressure
 		err = json.Unmarshal(e.RawState, &s)
 		e.State = &s
 		break
 	case "ZHASwitch":
-		var s ZHASwitch
+		var s sensor.ZHASwitch
 		err = json.Unmarshal(e.RawState, &s)
 		e.State = &s
 		break
 	case "ZHATemperature":
-		var s ZHATemperature
+		var s sensor.ZHATemperature
 		err = json.Unmarshal(e.RawState, &s)
 		e.State = &s
 		break
 	case "ZHAVibration":
-		var s ZHAVibration
+		var s sensor.ZHAVibration
 		err = json.Unmarshal(e.RawState, &s)
 		e.State = &s
 		break
 	case "ZHAWater":
-		var s ZHAWater
+		var s sensor.ZHAWater
 		err = json.Unmarshal(e.RawState, &s)
 		e.State = &s
 		break
@@ -151,11 +142,3 @@ func (e *Event) ParseState(tl TypeRepository) error {
 	// err should continue to be null if everythings ok
 	return err
 }
-
-// State is for embedding into event states
-type State struct {
-	Lastupdated string
-}
-
-// EmptyState is an empty struct used to indicate no state was parsed
-type EmptyState struct{}

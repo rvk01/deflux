@@ -2,28 +2,22 @@ package deconz
 
 import (
 	"errors"
-	"github.com/fixje/deflux/deconz/event"
 	log "github.com/sirupsen/logrus"
 	"time"
 )
 
-// SensorLookup represents an interface for sensor lookup
-type SensorLookup interface {
-	LookupSensor(int) (*Sensor, error)
-}
-
 // EventReader interface
 type EventReader interface {
-	ReadEvent() (*event.Event, error)
+	ReadEvent() (*Event, error)
 	Dial() error
 	Close() error
 }
 
-// SensorEventReader reads events from an event.WsReader and returns SensorEvents
+// SensorEventReader reads events from an sensor.WsReader and returns SensorEvents
 type SensorEventReader struct {
-	lookup  SensorLookup
-	reader  EventReader
-	running bool
+	sensorProvider SensorInfoProvider
+	reader         EventReader
+	running        bool
 }
 
 // Start starts a thread reading events
@@ -32,8 +26,8 @@ func (r *SensorEventReader) Start() (<-chan *SensorEvent, error) {
 
 	out := make(chan *SensorEvent)
 
-	if r.lookup == nil {
-		return nil, errors.New("Cannot run without a SensorLookup from which to lookup sensors")
+	if r.sensorProvider == nil {
+		return nil, errors.New("Cannot run without a SensorLookup from which to sensorProvider sensors")
 	}
 	if r.reader == nil {
 		return nil, errors.New("Cannot run without an EventReader from which to read events")
@@ -63,7 +57,7 @@ func (r *SensorEventReader) Start() (<-chan *SensorEvent, error) {
 			for r.running {
 				e, err := r.reader.ReadEvent()
 				if err != nil {
-					if eerr, ok := err.(event.EventError); ok && eerr.Recoverable() {
+					if eerr, ok := err.(EventError); ok && eerr.Recoverable() {
 						log.Errorf("Dropping event due to error: %s", err)
 						continue
 					}
@@ -75,9 +69,9 @@ func (r *SensorEventReader) Start() (<-chan *SensorEvent, error) {
 					continue
 				}
 
-				sensor, err := r.lookup.LookupSensor(e.ID)
+				sensor, err := r.sensorProvider.LookupSensor(e.ID)
 				if err != nil {
-					log.Warningf("Dropping event. Could not lookup sensor for id %d: %s", e.ID, err)
+					log.Warningf("Dropping event. Could not sensorProvider sensor for id %d: %s", e.ID, err)
 					continue
 				}
 				// send event on channel

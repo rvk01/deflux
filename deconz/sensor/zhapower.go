@@ -1,4 +1,4 @@
-package event
+package sensor
 
 // ZHAPower represents a Power Sensor
 type ZHAPower struct {

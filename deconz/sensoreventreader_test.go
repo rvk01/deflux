@@ -3,13 +3,13 @@ package deconz
 import (
 	"strconv"
 	"testing"
-
-	"github.com/fixje/deflux/deconz/event"
 )
 
-const smokeDetectorNoFireEventPayload = `{	"e": "changed",	"id": "5",	"r": "sensors",	"state": {	  "fire": false,	  "lastupdated": "2018-03-13T19:46:03",	  "lowbattery": false,	  "tampered": false	},	"t": "event"  }`
-
 type testLookup struct {
+}
+
+func (t *testLookup) Sensors() (*Sensors, error) {
+	return nil, nil
 }
 
 func (t *testLookup) LookupSensor(i int) (*Sensor, error) {
@@ -23,9 +23,8 @@ func (t *testLookup) LookupType(i int) (string, error) {
 type testReader struct {
 }
 
-func (t testReader) ReadEvent() (*event.Event, error) {
-	d := event.Decoder{TypeRepository: &testLookup{}}
-	return d.Parse([]byte(smokeDetectorNoFireEventPayload))
+func (t testReader) ReadEvent() (*Event, error) {
+	return ParseEvent(&testLookup{}, []byte(smokeDetectorNoFireEventPayload))
 }
 func (t testReader) Dial() error {
 	return nil
@@ -33,6 +32,8 @@ func (t testReader) Dial() error {
 func (t testReader) Close() error {
 	return nil
 }
+
+// FIXME test does not terminate
 func TestSensorEventReader(t *testing.T) {
 
 	r := SensorEventReader{reader: testReader{}}

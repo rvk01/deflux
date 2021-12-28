@@ -1,4 +1,4 @@
-package event
+package sensor
 
 // CLIPPresence represents a presence Sensor
 type CLIPPresence struct {

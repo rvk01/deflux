@@ -1,4 +1,4 @@
-package event
+package sensor
 
 // ZHAHumidity represents a presure change
 type ZHAHumidity struct {

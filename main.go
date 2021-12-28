@@ -87,19 +87,26 @@ func main() {
 func sensorEventChan(c deconz.Config) (<-chan *deconz.SensorEvent, error) {
 	// get an event reader from the API
 	d := deconz.API{Config: c}
-	reader, err := d.WsReader()
+	store, err := deconz.NewCachingSensorStore(d)
+
+	if err != nil {
+		return nil, err
+	}
+
+	reader, err := deconz.CreateWsReader(d, store)
 	if err != nil {
 		return nil, err
 	}
 
 	// Dial the reader
-	err = reader.Dial()
-	if err != nil {
-		return nil, err
-	}
+	// TODO should not be needed here
+	//err = reader.Dial()
+	//if err != nil {
+	//	return nil, err
+	//}
 
 	// create a new reader, embedding the event reader
-	sensorEventReader := d.SensorEventReader(reader)
+	sensorEventReader := deconz.CreateSensorEventReader(reader)
 
 	// start it, it starts its own thread
 	return sensorEventReader.Start()

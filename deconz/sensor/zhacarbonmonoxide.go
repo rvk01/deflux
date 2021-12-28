@@ -1,4 +1,4 @@
-package event
+package sensor
 
 // ZHACarbonMonoxide represents a CarbonMonoxide Sensor
 type ZHACarbonMonoxide struct {

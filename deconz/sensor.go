@@ -2,16 +2,21 @@ package deconz
 
 import (
 	"fmt"
-	"github.com/fixje/deflux/deconz/event"
 	"strconv"
 )
 
 // Sensors is a map of sensors indexed by their id
 type Sensors map[int]Sensor
 
-// SensorRepository provides sensor information
-type SensorRepository interface {
+// SensorInfoProvider provides information about sensors
+type SensorInfoProvider interface {
 	Sensors() (*Sensors, error)
+
+	// LookupSensor gets a sensor by id
+	LookupSensor(int) (*Sensor, error)
+
+	// LookupType returns the type for a given sensor id
+	LookupType(int) (string, error)
 }
 
 // Sensor is a deCONZ sensor, not that we only implement fields needed
@@ -24,7 +29,7 @@ type Sensor struct {
 // SensorEvent is a sensor with an additional
 type SensorEvent struct {
 	*Sensor
-	*event.Event
+	*Event
 }
 
 // fielder is an interface that provides fields for InfluxDB

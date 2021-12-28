@@ -1,4 +1,4 @@
-package event
+package sensor
 
 // ZHATemperature represents a temperature change
 type ZHATemperature struct {
