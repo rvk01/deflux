@@ -74,6 +74,11 @@ func (e *Event) ParseState(tl TypeLookuper) error {
 		err = json.Unmarshal(e.RawState, &s)
 		e.State = &s
 		break
+	case "ZHAPower":
+		var s ZHAPower
+		err = json.Unmarshal(e.RawState, &s)
+		e.State = &s
+		break
 	case "ZHATemperature":
 		var s ZHATemperature
 		err = json.Unmarshal(e.RawState, &s)
