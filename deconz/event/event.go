@@ -59,6 +59,11 @@ func (e *Event) ParseState(tl TypeLookuper) error {
 	}
 
 	switch t {
+	case "ZHAAirQuality":
+		var s ZHAAirQuality
+		err = json.Unmarshal(e.RawState, &s)
+		e.State = &s
+		break
 	case "ZHABattery":
 		var s ZHABattery
 		err = json.Unmarshal(e.RawState, &s)
