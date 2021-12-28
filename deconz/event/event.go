@@ -59,6 +59,16 @@ func (e *Event) ParseState(tl TypeLookuper) error {
 	}
 
 	switch t {
+	case "Daylight":
+		var s Daylight
+		err = json.Unmarshal(e.RawState, &s)
+		e.State = &s
+		break
+	case "CLIPPresence":
+		var s CLIPPresence
+		err = json.Unmarshal(e.RawState, &s)
+		e.State = &s
+		break
 	case "ZHAAirQuality":
 		var s ZHAAirQuality
 		err = json.Unmarshal(e.RawState, &s)
@@ -66,6 +76,11 @@ func (e *Event) ParseState(tl TypeLookuper) error {
 		break
 	case "ZHABattery":
 		var s ZHABattery
+		err = json.Unmarshal(e.RawState, &s)
+		e.State = &s
+		break
+	case "ZHACarbonMonoxide":
+		var s ZHACarbonMonoxide
 		err = json.Unmarshal(e.RawState, &s)
 		e.State = &s
 		break
@@ -79,48 +94,8 @@ func (e *Event) ParseState(tl TypeLookuper) error {
 		err = json.Unmarshal(e.RawState, &s)
 		e.State = &s
 		break
-	case "ZHAPower":
-		var s ZHAPower
-		err = json.Unmarshal(e.RawState, &s)
-		e.State = &s
-		break
-	case "ZHATemperature":
-		var s ZHATemperature
-		err = json.Unmarshal(e.RawState, &s)
-		e.State = &s
-		break
-	case "ZHAPressure":
-		var s ZHAPressure
-		err = json.Unmarshal(e.RawState, &s)
-		e.State = &s
-		break
 	case "ZHAHumidity":
 		var s ZHAHumidity
-		err = json.Unmarshal(e.RawState, &s)
-		e.State = &s
-		break
-	case "ZHAWater":
-		var s ZHAWater
-		err = json.Unmarshal(e.RawState, &s)
-		e.State = &s
-		break
-	case "ZHASwitch":
-		var s ZHASwitch
-		err = json.Unmarshal(e.RawState, &s)
-		e.State = &s
-		break
-	case "Daylight":
-		var s Daylight
-		err = json.Unmarshal(e.RawState, &s)
-		e.State = &s
-		break
-	case "ZHAPresence":
-		var s ZHAPresence
-		err = json.Unmarshal(e.RawState, &s)
-		e.State = &s
-		break
-	case "CLIPPresence":
-		var s CLIPPresence
 		err = json.Unmarshal(e.RawState, &s)
 		e.State = &s
 		break
@@ -129,18 +104,43 @@ func (e *Event) ParseState(tl TypeLookuper) error {
 		err = json.Unmarshal(e.RawState, &s)
 		e.State = &s
 		break
-	case "ZHAVibration":
-		var s ZHAVibration
-		err = json.Unmarshal(e.RawState, &s)
-		e.State = &s
-		break
 	case "ZHAOpenClose":
 		var s ZHAOpenClose
 		err = json.Unmarshal(e.RawState, &s)
 		e.State = &s
 		break
-	case "ZHACarbonMonoxide":
-		var s ZHACarbonMonoxide
+	case "ZHAPower":
+		var s ZHAPower
+		err = json.Unmarshal(e.RawState, &s)
+		e.State = &s
+		break
+	case "ZHAPresence":
+		var s ZHAPresence
+		err = json.Unmarshal(e.RawState, &s)
+		e.State = &s
+		break
+	case "ZHAPressure":
+		var s ZHAPressure
+		err = json.Unmarshal(e.RawState, &s)
+		e.State = &s
+		break
+	case "ZHASwitch":
+		var s ZHASwitch
+		err = json.Unmarshal(e.RawState, &s)
+		e.State = &s
+		break
+	case "ZHATemperature":
+		var s ZHATemperature
+		err = json.Unmarshal(e.RawState, &s)
+		e.State = &s
+		break
+	case "ZHAVibration":
+		var s ZHAVibration
+		err = json.Unmarshal(e.RawState, &s)
+		e.State = &s
+		break
+	case "ZHAWater":
+		var s ZHAWater
 		err = json.Unmarshal(e.RawState, &s)
 		e.State = &s
 		break
