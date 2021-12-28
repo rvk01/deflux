@@ -10,6 +10,28 @@ Influx did major changes moving from version 1 to version 2, most notably the
 introduction of a new query language called
 [Flux](https://docs.influxdata.com/influxdb/cloud/query-data/get-started/).
 
+The application supports the following types of sensors:
+
+- Daylight
+- CLIPPresence (_EXPERIMENTAL_)
+- ZHAAirQuality (_EXPERIMENTAL_)
+- ZHABattery (_EXPERIMENTAL_)
+- ZHACarbonMonoxide (_EXPERIMENTAL_)
+- ZHAConsumption (_EXPERIMENTAL_)
+- ZHAFire
+- ZHAHumidity
+- ZHALightLevel (_EXPERIMENTAL_)
+- ZHAOpenClose (_EXPERIMENTAL_)
+- ZHAPower (_EXPERIMENTAL_)
+- ZHAPresence (_EXPERIMENTAL_)
+- ZHAPressure (_EXPERIMENTAL_)
+- ZHASwitch
+- ZHATemperature
+- ZHAVibration (_EXPERIMENTAL_)
+- ZHAWater
+
+Sensors marked as _EXPERIMENTAL_ lack proper tests. If you are in posession of such a sensor, it would be nice if you
+provided some JSON test data as in [this test](deconz/event/event_test.go).
 
 ## Usage
 
