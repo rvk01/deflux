@@ -4,11 +4,28 @@ deflux connects to deCONZ rest api, listens for sensor updates and write these t
 
 deCONZ supports a variaty of Zigbee sensors but have no historical data about their values - with deflux you'll be able to store all these measurements in influxdb where they can be queried from the command line or graphical tools such as grafana. 
 
-This software was forked from the original
-[deflux](https://github.com/fasmide/deflux) and moved to InfluxDB version 2.
+This software was forked from the original [deflux](https://github.com/fasmide/deflux) and added support for InfluxDB
+version 2.
 Influx did major changes moving from version 1 to version 2, most notably the
 introduction of a new query language called
 [Flux](https://docs.influxdata.com/influxdb/cloud/query-data/get-started/).
+Note that writing to InfluxDB v1 is still possible. See the section about 
+[InfluxDB v1 compatibility](#influxdb-version-1-compatibility).
+
+## Table of Contents
+
+- [Supported Sensors](#supported-sensors)
+- [Usage](#usage)
+- [InfluxDB](#influxdb)
+    - [Version 2](#influxdb-version-2)
+    - [Version 1](#influxdb-version-1-compatibility)
+      - [Configuration](#configuration)
+- [Development](#development)
+
+---
+
+
+## Supported Sensors
 
 The application supports the following types of sensors:
 
@@ -32,6 +49,7 @@ The application supports the following types of sensors:
 
 Sensors marked as _EXPERIMENTAL_ lack proper tests. If you are in posession of such a sensor, it would be nice if you
 provided some JSON test data as in [this test](deconz/event/event_test.go).
+
 
 ## Usage
 
@@ -64,7 +82,9 @@ influxdb:
   bucket: default
 ```
 
-Save the sample configuration and edit it to your needs, then run again.
+Save the sample configuration and edit it to your needs, then run again. If you want to write to InfluxDB version 1, 
+see the section about [InfluxDB v1 configuration](#influx1compat).
+
 The default log level of the application is `warning`. You can set the
 `-loglevel=` flag to make it a bit more verbose:
 
@@ -83,7 +103,16 @@ See `deflux -h` for more information on command line flags.
 Sensor values are added as InfluxDB values and tagged with sensor type, id and name.
 Different event types are stored in different measurements, meaning you will end up with multiple InfluxDB measurements.
 
-### Schema Exploration
+
+### InfluxDB Version 2
+
+Use the Flux language to get data from InfluxDB version 2. Below are some examples.
+
+InfluxDB 2 has a nice query builder that will help you creating Flux queries.
+Visit InfluxDB's web interface, log in, and click "Explore" in the navigation
+bar.
+
+#### Schema Exploration
 
 You can use Flux queries to explore the schema.
 
@@ -126,7 +155,7 @@ Table: keys: []
                   type
 ```
 
-### Example Queries
+#### Example Queries
 
 Get temperature grouped by sensor name:
 
@@ -152,9 +181,58 @@ Table: keys: [name]
 ...
 ```
 
-InfluxDB 2 has a nice query builder that will help you creating Flux queries.
-Visit InfluxDB's web interface, log in, and click "Explore" in the navigation
-bar.
+
+### InfluxDB Version 1 Compatibility
+
+The application still supports InfluxDB version 1.
+The [minimum required version](https://github.com/influxdata/influxdb-client-go/#influxdb-18-api-compatibility) is `1.8`.
+
+
+#### Configuration
+
+To write to InfluxDB v1 instances, provide your username and password separated by colon (`:`) in the `token` field.
+You need to leave the `org` field empty. The name of the database is provided as `bucket`. Here is an example
+`deflux.yml`:
+
+```yml
+deconz:
+  addr: ...
+  apikey: ...
+influxdb:
+  url: http://localhost:8086
+  token: "USERNAME:PASSWORD"
+  org: ""
+  bucket: "DATABASE"
+```
+
+#### Data Exploration
+
+You can inspect the data and its schema using the interactive `influx` shell:
+
+```
+> use sensors;
+Using database sensors
+
+> show measurements
+name: measurements
+name
+----
+deflux_ZHAHumidity
+deflux_ZHAPressure
+deflux_ZHATemperature
+```
+
+Here is an example how to retrieve pressure values:
+
+```
+> select * from deflux_ZHAPressure;
+name: deflux_ZHAPressure
+time                id name  pressure type
+----                -- ----  -------- ----
+1640699399114005127 4  th-sz 987      ZHAPressure
+1640699409416247640 4  th-sz 987      ZHAPressure
+...
+```
 
 
 ## Development
