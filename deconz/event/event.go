@@ -5,8 +5,8 @@ import (
 	"fmt"
 )
 
-// TypeLookuper is the interface that we require to lookup types from id's
-type TypeLookuper interface {
+// TypeRepository provides event types by sensor ID
+type TypeRepository interface {
 	LookupType(int) (string, error)
 }
 
@@ -22,7 +22,7 @@ type Event struct {
 
 // Decoder is able to decode deCONZ events
 type Decoder struct {
-	TypeStore TypeLookuper
+	TypeRepository TypeRepository
 }
 
 // Parse parses events from bytes
@@ -41,7 +41,7 @@ func (d *Decoder) Parse(b []byte) (*Event, error) {
 		return &e, nil
 	}
 
-	err = e.ParseState(d.TypeStore)
+	err = e.ParseState(d.TypeRepository)
 	if err != nil {
 		return nil, fmt.Errorf("unable to unmarshal state: %s", err)
 	}
@@ -50,8 +50,8 @@ func (d *Decoder) Parse(b []byte) (*Event, error) {
 }
 
 // ParseState tries to unmarshal the appropriate state based
-// on looking up the id though the TypeStore
-func (e *Event) ParseState(tl TypeLookuper) error {
+// on looking up the id though the TypeRepository
+func (e *Event) ParseState(tl TypeRepository) error {
 
 	t, err := tl.LookupType(e.ID)
 	if err != nil {
@@ -59,13 +59,13 @@ func (e *Event) ParseState(tl TypeLookuper) error {
 	}
 
 	switch t {
-	case "Daylight":
-		var s Daylight
+	case "CLIPPresence":
+		var s CLIPPresence
 		err = json.Unmarshal(e.RawState, &s)
 		e.State = &s
 		break
-	case "CLIPPresence":
-		var s CLIPPresence
+	case "Daylight":
+		var s Daylight
 		err = json.Unmarshal(e.RawState, &s)
 		e.State = &s
 		break
@@ -155,19 +155,6 @@ func (e *Event) ParseState(tl TypeLookuper) error {
 // State is for embedding into event states
 type State struct {
 	Lastupdated string
-}
-
-// CLIPPresence represents a presence Sensor
-type CLIPPresence struct {
-	State
-	Presence bool
-}
-
-// Fields returns timeseries data for influxdb
-func (z *CLIPPresence) Fields() map[string]interface{} {
-	return map[string]interface{}{
-		"presence": z.Presence,
-	}
 }
 
 // EmptyState is an empty struct used to indicate no state was parsed

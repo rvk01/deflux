@@ -19,26 +19,28 @@ type EventReader interface {
 	Close() error
 }
 
-// SensorEventReader reads events from an event.reader and returns SensorEvents
+// SensorEventReader reads events from an event.WsReader and returns SensorEvents
 type SensorEventReader struct {
 	lookup  SensorLookup
 	reader  EventReader
 	running bool
 }
 
-// starts a thread reading events into the given channel
-// returns immediately
-func (r *SensorEventReader) Start(out chan *SensorEvent) error {
+// Start starts a thread reading events
+// returns the channel to retrieve events from
+func (r *SensorEventReader) Start() (<-chan *SensorEvent, error) {
+
+	out := make(chan *SensorEvent)
 
 	if r.lookup == nil {
-		return errors.New("Cannot run without a SensorLookup from which to lookup sensors")
+		return nil, errors.New("Cannot run without a SensorLookup from which to lookup sensors")
 	}
 	if r.reader == nil {
-		return errors.New("Cannot run without a EventReader from which to read events")
+		return nil, errors.New("Cannot run without an EventReader from which to read events")
 	}
 
 	if r.running {
-		return errors.New("Reader is already running.")
+		return nil, errors.New("SensorEventReader is already running")
 	}
 
 	r.running = true
@@ -90,10 +92,10 @@ func (r *SensorEventReader) Start(out chan *SensorEvent) error {
 		}
 		log.Infof("Deconz websocket closed")
 	}()
-	return nil
+	return out, nil
 }
 
-// Close closes the reader, closing the connection to deconz and terminating the goroutine
+// StopReadEvents closes the reader, closing the connection to deCONZ and terminating the goroutine
 func (r *SensorEventReader) StopReadEvents() {
 	r.running = false
 }

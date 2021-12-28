@@ -27,7 +27,7 @@ Note that writing to InfluxDB v1 is still possible. See the section about
 
 ## Supported Sensors
 
-The application supports the following types of sensors:
+The application supports the following types of [sensors](https://dresden-elektronik.github.io/deconz-rest-doc/endpoints/sensors/#supported-state-attributes_1):
 
 - Daylight
 - CLIPPresence (_EXPERIMENTAL_)

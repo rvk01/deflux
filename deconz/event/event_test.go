@@ -35,7 +35,7 @@ var decoder Decoder
 
 func TestMain(m *testing.M) {
 
-	decoder = Decoder{TypeStore: &LookupImpl{Store: map[int]string{
+	decoder = Decoder{TypeRepository: &LookupImpl{Store: map[int]string{
 		1: "ZHATemperature",
 		2: "ZHAHumidity",
 		3: "ZHAPressure",

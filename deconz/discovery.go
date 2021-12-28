@@ -6,13 +6,13 @@ import (
 	"net/http"
 )
 
-// DeconzDiscoveryEndpoint is the url used when auto discovering a deconz gateway
+// DeconzDiscoveryEndpoint is the url used when auto discovering a deCONZ gateway
 const DeconzDiscoveryEndpoint = "https://dresden-light.appspot.com/discover"
 
 // DiscoveryResponse is a slice of discovered gateways
 type DiscoveryResponse []Discovery
 
-// Discovery is a discovered deconz gateway
+// Discovery is a discovered deCONZ gateway
 // [{"macaddress": "00212EFFFF017FBD", "name": "deCONZ-GW", "internalipaddress": "192.168.1.90", "publicipaddress": "85.191.222.130", "internalport": 8080, "id": "00212EFFFF017FBD"}]
 type Discovery struct {
 	ID                string
@@ -23,7 +23,7 @@ type Discovery struct {
 	InternalPort      uint
 }
 
-// Discover discovers deconz gateways
+// Discover discovers deCONZ gateways
 func Discover() (DiscoveryResponse, error) {
 	response, err := http.Get(DeconzDiscoveryEndpoint)
 	if err != nil {

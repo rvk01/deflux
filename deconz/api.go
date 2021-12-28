@@ -9,8 +9,11 @@ import (
 )
 
 // API represents the deCONZ rest api
+// It implements the SensorRepository interface
 type API struct {
-	Config      Config
+	Config Config
+
+	// sensorCache is used to look up types of sensors when a new event is received via websocket
 	sensorCache *CachedSensorStore
 }
 
@@ -37,11 +40,11 @@ func (a *API) Sensors() (*Sensors, error) {
 
 }
 
-// EventReader returns a event.Reader with a default cached type store
-func (a *API) EventReader() (*event.Reader, error) {
+// WsReader returns an event.WsReader with a default CachedSensorStore
+func (a *API) WsReader() (*event.WsReader, error) {
 
 	if a.sensorCache == nil {
-		a.sensorCache = &CachedSensorStore{SensorGetter: a}
+		a.sensorCache = &CachedSensorStore{SensorRepository: a}
 	}
 
 	if a.Config.wsAddr == "" {
@@ -51,14 +54,14 @@ func (a *API) EventReader() (*event.Reader, error) {
 		}
 	}
 
-	return &event.Reader{TypeStore: a.sensorCache, WebsocketAddr: a.Config.wsAddr}, nil
+	return &event.WsReader{TypeRepository: a.sensorCache, WebsocketAddr: a.Config.wsAddr}, nil
 }
 
-// SensorEventReader takes an event reader and returns an sensor event reader
-func (a *API) SensorEventReader(r *event.Reader) *SensorEventReader {
+// SensorEventReader takes an event reader and returns a SensorEventReader
+func (a *API) SensorEventReader(r *event.WsReader) *SensorEventReader {
 
 	if a.sensorCache == nil {
-		a.sensorCache = &CachedSensorStore{SensorGetter: a}
+		a.sensorCache = &CachedSensorStore{SensorRepository: a}
 	}
 
 	return &SensorEventReader{lookup: a.sensorCache, reader: r}

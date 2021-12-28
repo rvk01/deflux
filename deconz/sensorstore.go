@@ -9,18 +9,14 @@ import (
 // CachedSensorStore is a cached typestore which provides LookupType for event passing
 // it will be our default store
 type CachedSensorStore struct {
-	SensorGetter
+	SensorRepository
 	cache *Sensors
-}
-
-// SensorGetter defines how we like to ask for sensors
-type SensorGetter interface {
-	Sensors() (*Sensors, error)
 }
 
 // LookupType lookups deCONZ event types though a cache
 // TODO: if we where unable to lookup an ID we should try to refetch the cache
 // - there could have been an sensor added we dont know about
+// TODO use "enum": https://stackoverflow.com/questions/14426366/what-is-an-idiomatic-way-of-representing-enums-in-go
 func (c *CachedSensorStore) LookupType(i int) (string, error) {
 	var err error
 	if c.cache == nil {
@@ -37,7 +33,7 @@ func (c *CachedSensorStore) LookupType(i int) (string, error) {
 	return "", errors.New("no such sensor")
 }
 
-// LookupSensor returns a sensor for an sensor id
+// LookupSensor returns a sensor for a sensor id
 func (c *CachedSensorStore) LookupSensor(i int) (*Sensor, error) {
 	var err error
 	if c.cache == nil {

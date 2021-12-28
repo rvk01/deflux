@@ -7,41 +7,37 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// Reader represents a deconz server device
-type Reader struct {
-	WebsocketAddr string
-	TypeStore     TypeLookuper
-	decoder       *Decoder
-	conn          *websocket.Conn
+// WsReader holds a deCONZ websocket server connection
+// It implements the deconz.EventReader interface
+type WsReader struct {
+	WebsocketAddr  string
+	TypeRepository TypeRepository
+	decoder        *Decoder
+	conn           *websocket.Conn
 }
 
-type EventError interface {
+type EventError struct {
 	error
-	Recoverable() bool
-}
-
-type EventErrorImpl struct {
-	errStr      string
 	recoverable bool
 }
 
-func (e EventErrorImpl) Recoverable() bool {
+func NewEventError(err error, recoverable bool) EventError {
+	return EventError{err, recoverable}
+}
+
+func (e EventError) Recoverable() bool {
 	return e.recoverable
 }
 
-func (e EventErrorImpl) Error() string {
-	return e.errStr
-}
+// Dial connects connects to the deCONZ websocket, use ReadEvent to receive events
+func (r *WsReader) Dial() error {
 
-// Dial connects connects to deconz, use ReadEvent to recieve events
-func (r *Reader) Dial() error {
-
-	if r.TypeStore == nil {
-		return errors.New("cannot dial without a TypeStore to lookup events from")
+	if r.TypeRepository == nil {
+		return errors.New("cannot dial without a TypeRepository to lookup events from")
 	}
 
 	// create a decoder with the typestore
-	r.decoder = &Decoder{TypeStore: r.TypeStore}
+	r.decoder = &Decoder{TypeRepository: r.TypeRepository}
 
 	// connect
 	var err error
@@ -52,8 +48,8 @@ func (r *Reader) Dial() error {
 	return nil
 }
 
-// ReadEvent reads, parses and returns the next event
-func (r *Reader) ReadEvent() (*Event, error) {
+// ReadEvent reads, parses and returns the next event from the websocket
+func (r *WsReader) ReadEvent() (*Event, error) {
 
 	_, message, err := r.conn.ReadMessage()
 	if err != nil {
@@ -64,13 +60,13 @@ func (r *Reader) ReadEvent() (*Event, error) {
 
 	e, err := r.decoder.Parse(message)
 	if err != nil {
-		return nil, EventErrorImpl{fmt.Errorf("unable to parse message: %s", err).Error(), true}
+		return nil, NewEventError(fmt.Errorf("unable to parse message: %s", err), true)
 	}
 
 	return e, nil
 }
 
 // Close closes the connection to deconz
-func (r *Reader) Close() error {
+func (r *WsReader) Close() error {
 	return r.conn.Close()
 }

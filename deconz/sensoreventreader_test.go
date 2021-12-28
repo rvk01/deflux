@@ -24,7 +24,7 @@ type testReader struct {
 }
 
 func (t testReader) ReadEvent() (*event.Event, error) {
-	d := event.Decoder{TypeStore: &testLookup{}}
+	d := event.Decoder{TypeRepository: &testLookup{}}
 	return d.Parse([]byte(smokeDetectorNoFireEventPayload))
 }
 func (t testReader) Dial() error {
@@ -36,8 +36,7 @@ func (t testReader) Close() error {
 func TestSensorEventReader(t *testing.T) {
 
 	r := SensorEventReader{reader: testReader{}}
-	channel := make(chan *SensorEvent)
-	err := r.Start(channel)
+	channel, err := r.Start()
 	if err != nil {
 		t.Fail()
 	}

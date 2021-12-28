@@ -8,7 +8,7 @@ import (
 	"path"
 )
 
-// Config represents a Deconz gateway
+// Config holds properties of a deCONZ gateway
 type Config struct {
 	Addr   string
 	APIKey string
@@ -20,6 +20,8 @@ type config struct {
 	Websocketport int
 }
 
+// discoverWebsocket tries to retrieve the websocket address from the deCONZ REST API
+// using the /config endpoint
 func (c *Config) discoverWebsocket() error {
 	u, err := url.Parse(c.Addr)
 	if err != nil {

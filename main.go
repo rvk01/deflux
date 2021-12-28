@@ -84,10 +84,10 @@ func main() {
 	influxClient.Close()
 }
 
-func sensorEventChan(c deconz.Config) (chan *deconz.SensorEvent, error) {
+func sensorEventChan(c deconz.Config) (<-chan *deconz.SensorEvent, error) {
 	// get an event reader from the API
 	d := deconz.API{Config: c}
-	reader, err := d.EventReader()
+	reader, err := d.WsReader()
 	if err != nil {
 		return nil, err
 	}
@@ -100,9 +100,7 @@ func sensorEventChan(c deconz.Config) (chan *deconz.SensorEvent, error) {
 
 	// create a new reader, embedding the event reader
 	sensorEventReader := d.SensorEventReader(reader)
-	channel := make(chan *deconz.SensorEvent)
+
 	// start it, it starts its own thread
-	sensorEventReader.Start(channel)
-	// return the channel
-	return channel, nil
+	return sensorEventReader.Start()
 }

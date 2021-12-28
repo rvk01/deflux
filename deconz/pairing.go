@@ -32,7 +32,7 @@ type pairFailure struct {
 	}
 }
 
-// Pair tries to pair with deconz and returns a pairing with an API key
+// Pair tries to pair with deCONZ and returns a pairing with an API key
 func Pair(u url.URL) (APIKey, error) {
 	// to pair we must send a POST request to "/api" containing a pairRequest
 	u.Path = "/api"
