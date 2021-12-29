@@ -41,7 +41,7 @@ func Discover() (DiscoveryResponse, error) {
 	}
 
 	if len(data) == 0 {
-		return nil, fmt.Errorf("no gateways was found")
+		return nil, fmt.Errorf("no gateways found")
 	}
 
 	return data, nil

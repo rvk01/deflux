@@ -13,10 +13,10 @@ type API struct {
 	Config Config
 
 	// sensorCache is used to look up types of sensors when a new event is received via websocket
-	sensorCache *CachingSensorStore
+	sensorCache *CachingSensorProvider
 }
 
-// Config holds properties of a deCONZ gateway
+// Config holds properties of the deCONZ API
 type Config struct {
 	Addr   string
 	APIKey string
@@ -28,7 +28,7 @@ type config struct {
 	Websocketport int
 }
 
-// Sensors returns a map of sensors
+// Sensors returns a map of sensors as received from the deCONZ /sensors endpoint
 func (a *API) Sensors() (*Sensors, error) {
 
 	uri := fmt.Sprintf("%s/%s/sensors", a.Config.Addr, a.Config.APIKey)
@@ -44,15 +44,17 @@ func (a *API) Sensors() (*Sensors, error) {
 	dec := json.NewDecoder(resp.Body)
 	err = dec.Decode(&sensors)
 	if err != nil {
-		return nil, fmt.Errorf("unable to decode deCONZ response: %s", err)
+		return nil, fmt.Errorf("unable to decode deCONZ /sensors response: %s", err)
 	}
 
 	return &sensors, nil
-
 }
 
 // CreateWsReader creates a WsReader which consumes events from the deCONZ websocket interface
-func CreateWsReader(api API, si SensorInfoProvider) (*WsReader, error) {
+// It uses the API to discover the websocket address
+// The structure of the JSON messages from the websocket depend on the resource/sensor type. Thus,
+// the WsReader requires a SensorProvider to properly unmarshal those messages.
+func CreateWsReader(api API, si SensorProvider) (*WsReader, error) {
 
 	if api.Config.wsAddr == "" {
 		err := api.Config.discoverWebsocket()
@@ -66,7 +68,7 @@ func CreateWsReader(api API, si SensorInfoProvider) (*WsReader, error) {
 
 // CreateSensorEventReader creates a new SensorEventReader that continuously reads events from the given WsReader
 func CreateSensorEventReader(r *WsReader) *SensorEventReader {
-	return &SensorEventReader{sensorProvider: r.sensorInfo, reader: r}
+	return &SensorEventReader{reader: r}
 }
 
 // discoverWebsocket tries to retrieve the websocket address from the deCONZ REST API
@@ -74,13 +76,13 @@ func CreateSensorEventReader(r *WsReader) *SensorEventReader {
 func (c *Config) discoverWebsocket() error {
 	u, err := url.Parse(c.Addr)
 	if err != nil {
-		return fmt.Errorf("unable to discover websocket: %s", err)
+		return fmt.Errorf("unable to discover websocket while parsing config: %s", err)
 	}
 	u.Path = path.Join(u.Path, c.APIKey, "config")
 
 	resp, err := http.Get(u.String())
 	if err != nil {
-		return fmt.Errorf("unable to discover websocket: %s", err)
+		return fmt.Errorf("unable to discover websocket while getting config: %s", err)
 	}
 	defer resp.Body.Close()
 
@@ -89,7 +91,7 @@ func (c *Config) discoverWebsocket() error {
 	var conf config
 	err = dec.Decode(&conf)
 	if err != nil {
-		return fmt.Errorf("unable to discover websocket: %s", err)
+		return fmt.Errorf("unable to discover websocket while decoding response: %s", err)
 	}
 
 	// change our old parsed url to websocket, it should connect to the websocket endpoint of deCONZ

@@ -87,7 +87,7 @@ func main() {
 func sensorEventChan(c deconz.Config) (<-chan *deconz.SensorEvent, error) {
 	// get an event reader from the API
 	d := deconz.API{Config: c}
-	store, err := deconz.NewCachingSensorStore(d)
+	store, err := deconz.NewCachingSensorProvider(d)
 
 	if err != nil {
 		return nil, err

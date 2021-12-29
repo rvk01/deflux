@@ -8,14 +8,15 @@ import (
 )
 
 // WsReader holds a deCONZ websocket server connection
-// It implements the deconz.EventReader interface
+// It implements the EventReader interface
 type WsReader struct {
 	WebsocketAddr string
-	sensorInfo    SensorInfoProvider
+	sensorInfo    SensorProvider
 	conn          *websocket.Conn
 }
 
-// Dial connects connects to the deCONZ websocket, use ReadEvent to receive events
+// Dial connects connects to the deCONZ websocket
+// Use ReadEvent to receive events
 func (r *WsReader) Dial() error {
 
 	if r.sensorInfo == nil {
@@ -32,7 +33,7 @@ func (r *WsReader) Dial() error {
 }
 
 // ReadEvent reads, parses and returns the next event from the websocket
-func (r *WsReader) ReadEvent() (*Event, error) {
+func (r *WsReader) ReadEvent() (Event, error) {
 
 	_, message, err := r.conn.ReadMessage()
 	if err != nil {
@@ -41,7 +42,7 @@ func (r *WsReader) ReadEvent() (*Event, error) {
 
 	log.Debugf("recv: %s", message)
 
-	e, err := ParseEvent(r.sensorInfo, message)
+	e, err := DecodeEvent(r.sensorInfo, message)
 	if err != nil {
 		return nil, NewEventError(fmt.Errorf("unable to parse message: %s", err), true)
 	}
@@ -49,7 +50,7 @@ func (r *WsReader) ReadEvent() (*Event, error) {
 	return e, nil
 }
 
-// Close closes the connection to deconz
+// Close closes the deCONZ websocket connection
 func (r *WsReader) Close() error {
 	return r.conn.Close()
 }

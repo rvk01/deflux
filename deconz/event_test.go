@@ -22,51 +22,45 @@ const floodDetectorFloodDetectedEventPayload = `{ "e": "changed", "id": "6", "r"
 const switchSensorEventPayload = `{	"e": "changed",	"id": "7",	"r": "sensors",	"state": {	  "buttonevent": 1000,	  "lastupdated": "2018-03-20T20:52:18"	},	"t": "event"  }  `
 
 type LookupImpl struct {
-	Store map[int]string
+	Store *Sensors
 }
 
-func (l LookupImpl) LookupSensor(i int) (*Sensor, error) {
-	if _, ok := l.Store[i]; ok {
-		// FIXME
-		return nil, nil
+func (l LookupImpl) Sensor(i int) (*Sensor, error) {
+	if s, ok := (*l.Store)[i]; ok {
+		return &s, nil
 	}
 	return nil, errors.New("not found")
 }
 
-func (l LookupImpl) LookupType(i int) (string, error) {
-	if t, ok := l.Store[i]; ok {
-		return t, nil
-	}
-	return "", errors.New("not found")
-}
-
 func (l LookupImpl) Sensors() (*Sensors, error) {
-	return nil, nil
+	return l.Store, nil
 }
 
-var sensorInfo SensorInfoProvider
+var sensorInfo SensorProvider
 
+// FIXME init?
 func TestMain(m *testing.M) {
 
-	sensorInfo = LookupImpl{Store: map[int]string{
-		1: "ZHATemperature",
-		2: "ZHAHumidity",
-		3: "ZHAPressure",
-		5: "ZHAFire",
-		6: "ZHAWater",
-		7: "ZHASwitch",
+	sensorInfo = LookupImpl{Store: &Sensors{
+		1: Sensor{Type: "ZHATemperature", Name: "ZHATemperature"},
+		2: Sensor{Type: "ZHAHumidity", Name: "ZHAHumidity"},
+		3: Sensor{Type: "ZHAPressure", Name: "ZHAPressure"},
+		5: Sensor{Type: "ZHAFire", Name: "ZHAFire"},
+		6: Sensor{Type: "ZHAWater", Name: "ZHAWater"},
+		7: Sensor{Type: "ZHASwitch", Name: "ZHASwitch"},
 	}}
+
 	os.Exit(m.Run())
 }
 
 func TestSmokeDetectorNoFireEvent(t *testing.T) {
-	result, err := ParseEvent(sensorInfo, []byte(smokeDetectorNoFireEventPayload))
+	result, err := DecodeEvent(sensorInfo, []byte(smokeDetectorNoFireEventPayload))
 	if err != nil {
 		t.Logf("unable to unmarshal smoke detector event: %s", err)
 		t.FailNow()
 	}
 
-	smokeDetectorEvent, success := result.State.(*sensor.ZHAFire)
+	smokeDetectorEvent, success := result.State().(*sensor.ZHAFire)
 	if !success {
 		t.Log("unable to type assert smoke detector event")
 		t.FailNow()
@@ -79,13 +73,13 @@ func TestSmokeDetectorNoFireEvent(t *testing.T) {
 
 func TestFloodDetectorEvent(t *testing.T) {
 
-	result, err := ParseEvent(sensorInfo, []byte(floodDetectorFloodDetectedEventPayload))
+	result, err := DecodeEvent(sensorInfo, []byte(floodDetectorFloodDetectedEventPayload))
 	if err != nil {
 		t.Logf("Could not parse flood detector event: %s", err)
 		t.FailNow()
 	}
 
-	floodEvent, success := result.State.(*sensor.ZHAWater)
+	floodEvent, success := result.State().(*sensor.ZHAWater)
 	if !success {
 		t.Log("Unable to type assert floodevent")
 		t.FailNow()
@@ -99,13 +93,13 @@ func TestFloodDetectorEvent(t *testing.T) {
 
 func TestPressureEvent(t *testing.T) {
 
-	result, err := ParseEvent(sensorInfo, []byte(pressureEventPayload))
+	result, err := DecodeEvent(sensorInfo, []byte(pressureEventPayload))
 	if err != nil {
 		t.Logf("Could not parse pressure: %s", err)
 		t.FailNow()
 	}
 
-	pressure, success := result.State.(*sensor.ZHAPressure)
+	pressure, success := result.State().(*sensor.ZHAPressure)
 	if !success {
 		t.Log("Coudl not assert to pressureevent")
 		t.FailNow()
@@ -118,13 +112,13 @@ func TestPressureEvent(t *testing.T) {
 
 func TestTemperatureEvent(t *testing.T) {
 
-	result, err := ParseEvent(sensorInfo, []byte(temperatureEventPayload))
+	result, err := DecodeEvent(sensorInfo, []byte(temperatureEventPayload))
 	if err != nil {
 		t.Logf("Could not parse temperature: %s", err)
 		t.FailNow()
 	}
 
-	temp, success := result.State.(*sensor.ZHATemperature)
+	temp, success := result.State().(*sensor.ZHATemperature)
 	if !success {
 		t.Logf("Could not assert to temperature event")
 		t.FailNow()
@@ -137,13 +131,13 @@ func TestTemperatureEvent(t *testing.T) {
 
 func TestHumidityEvent(t *testing.T) {
 
-	result, err := ParseEvent(sensorInfo, []byte(humidityEventPayload))
+	result, err := DecodeEvent(sensorInfo, []byte(humidityEventPayload))
 	if err != nil {
 		t.Logf("Could not parse humidity: %s", err)
 		t.FailNow()
 	}
 
-	humidity, success := result.State.(*sensor.ZHAHumidity)
+	humidity, success := result.State().(*sensor.ZHAHumidity)
 	if !success {
 		t.Logf("unable assert humidity event")
 		t.FailNow()
@@ -156,13 +150,13 @@ func TestHumidityEvent(t *testing.T) {
 
 func TestSwitchEvent(t *testing.T) {
 
-	result, err := ParseEvent(sensorInfo, []byte(switchSensorEventPayload))
+	result, err := DecodeEvent(sensorInfo, []byte(switchSensorEventPayload))
 	if err != nil {
 		t.Logf("Could not parse switch event: %s", err)
 		t.FailNow()
 	}
 
-	s, success := result.State.(*sensor.ZHASwitch)
+	s, success := result.State().(*sensor.ZHASwitch)
 	if !success {
 		t.Logf("unable assert switch event")
 		t.FailNow()
