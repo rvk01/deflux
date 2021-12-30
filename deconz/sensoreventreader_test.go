@@ -1,6 +1,7 @@
 package deconz
 
 import (
+	ctx "context"
 	"strconv"
 	"testing"
 )
@@ -26,7 +27,7 @@ type testReader struct {
 func (t testReader) ReadEvent() (Event, error) {
 	return DecodeEvent(&testLookup{}, []byte(smokeDetectorNoFireEventPayload))
 }
-func (t testReader) Dial() error {
+func (t testReader) Dial(ctx ctx.Context) error {
 	return nil
 }
 func (t testReader) Close() error {
@@ -36,7 +37,8 @@ func (t testReader) Close() error {
 func TestSensorEventReader(t *testing.T) {
 
 	r := SensorEventReader{reader: testReader{}}
-	channel, err := r.Start()
+
+	channel, err := r.Start(ctx.Background())
 	if err != nil {
 		t.Fail()
 	}
