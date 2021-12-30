@@ -1,8 +1,12 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/fixje/deflux/config"
@@ -25,6 +29,11 @@ func main() {
 		FullTimestamp: true,
 	})
 
+	ctx1, cancel := context.WithCancel(context.Background())
+	done := make(chan bool, 1)
+	sigsCh := make(chan os.Signal, 1)
+	signal.Notify(sigsCh, syscall.SIGINT, syscall.SIGTERM)
+
 	cfg, err := config.LoadConfiguration()
 	if err != nil {
 		log.Errorf("no configuration could be found: %s", err)
@@ -32,7 +41,12 @@ func main() {
 		return
 	}
 
-	sensorChan, err := sensorEventChan(cfg.Deconz)
+	eventReader, err := sensorEventChan(cfg.Deconz)
+	if err != nil {
+		panic(err)
+	}
+
+	sensorsCh, err := eventReader.Start(ctx1)
 	if err != nil {
 		panic(err)
 	}
@@ -49,42 +63,63 @@ func main() {
 	// Get errors channel
 	errorsCh := writeAPI.Errors()
 
-	// Create go proc for reading and logging errors
+	// read and log errors in a separate go routine
 	go func() {
 		for err := range errorsCh {
 			fmt.Printf("write error: %s\n", err.Error())
 		}
 	}()
 
-	for {
+	// main
+	go func(ctx context.Context) {
+		for {
+			select {
+			case sensorEvent := <-sensorsCh:
+				tags, fields, err := sensorEvent.Timeseries()
+				if err != nil {
+					log.Warningf("not adding event to influx: %s", err)
+					continue
+				}
 
-		select {
-		case sensorEvent := <-sensorChan:
-			tags, fields, err := sensorEvent.Timeseries()
-			if err != nil {
-				log.Warningf("not adding event to influx: %s", err)
-				continue
+				log.Debugf("Writing point for sensor %s, tags = %v, fields = %v", sensorEvent.Sensor.Type, tags, fields)
+
+				writeAPI.WritePoint(influxdb2.NewPoint(
+					fmt.Sprintf("deflux_%s", sensorEvent.Sensor.Type),
+					tags,
+					fields,
+					time.Now(), // TODO: we should use the time associated with the event...
+				))
+
+			case <-ctx.Done():
+				// Force all unwritten data to be sent
+				// FIXME panics: writeAPI.Flush()
+				// Ensures background processes finishes
+				influxClient.Close()
 			}
-
-			log.Debugf("Writing point for sensor %s, tags = %v, fields = %v", sensorEvent.Sensor.Type, tags, fields)
-
-			writeAPI.WritePoint(influxdb2.NewPoint(
-				fmt.Sprintf("deflux_%s", sensorEvent.Sensor.Type),
-				tags,
-				fields,
-				time.Now(), // TODO: we should use the time associated with the event...
-			))
-
 		}
-	}
 
-	// Force all unwritten data to be sent
-	writeAPI.Flush()
-	// Ensures background processes finishes
-	influxClient.Close()
+	}(ctx1)
+
+	// signal handling
+	go func() {
+		select {
+		case sig := <-sigsCh:
+			log.Debugf("Received signal %s", sig)
+			cancel()
+
+			ctx, cancel := context.WithTimeout(context.Background(), 1 * time.Second)
+			eventReader.Shutdown(ctx)
+			cancel()
+			done <- true
+			return
+		}
+	}()
+
+	<-done
+	log.Info("Exiting")
 }
 
-func sensorEventChan(c deconz.Config) (<-chan *deconz.SensorEvent, error) {
+func sensorEventChan(c deconz.Config) (*deconz.SensorEventReader, error) {
 	// get an event reader from the API
 	d := deconz.API{Config: c}
 	store, err := deconz.NewCachingSensorProvider(d)
@@ -98,16 +133,9 @@ func sensorEventChan(c deconz.Config) (<-chan *deconz.SensorEvent, error) {
 		return nil, err
 	}
 
-	// Dial the reader
-	// TODO should not be needed here
-	//err = reader.Dial()
-	//if err != nil {
-	//	return nil, err
-	//}
-
 	// create a new reader, embedding the event reader
 	sensorEventReader := deconz.CreateSensorEventReader(reader)
 
 	// start it, it starts its own thread
-	return sensorEventReader.Start()
+	return sensorEventReader, nil
 }

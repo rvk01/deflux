@@ -21,6 +21,7 @@ Note that writing to InfluxDB v1 is still possible. See the section about
     - [Version 1](#influxdb-version-1-compatibility)
       - [Configuration](#configuration)
 - [Development](#development)
+- [Resources](#resources)
 
 ---
 
@@ -244,3 +245,8 @@ You can cross-compile for Raspberry Pi 4 by setting `GOARCH` and `GOARM`:
 ```bash
 GOOS=linux GOARCH=arm GOARM=7 go build
 ```
+
+
+## Resources
+
+- [deCONZ websocket API docs](https://dresden-elektronik.github.io/deconz-rest-doc/endpoints/websocket/#message-fields)

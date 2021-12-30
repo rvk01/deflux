@@ -68,7 +68,7 @@ func CreateWsReader(api API, si SensorProvider) (*WsReader, error) {
 
 // CreateSensorEventReader creates a new SensorEventReader that continuously reads events from the given WsReader
 func CreateSensorEventReader(r *WsReader) *SensorEventReader {
-	return &SensorEventReader{reader: r}
+	return &SensorEventReader{reader: r, done: make(chan bool, 1)}
 }
 
 // discoverWebsocket tries to retrieve the websocket address from the deCONZ REST API

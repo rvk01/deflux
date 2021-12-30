@@ -1,15 +1,18 @@
 package deconz
 
 import (
+	ctx "context"
 	"errors"
 	log "github.com/sirupsen/logrus"
 	"time"
 )
 
 // EventReader is an interface to read single events
+// For testability, it is decoupled from the SensorEventReader which runs the main business logic around connection
+// management
 type EventReader interface {
 	ReadEvent() (Event, error)
-	Dial() error
+	Dial(ctx ctx.Context) error
 	Close() error
 }
 
@@ -18,11 +21,12 @@ type EventReader interface {
 type SensorEventReader struct {
 	reader  EventReader
 	running bool
+	done chan bool
 }
 
 // Start starts a go routine that reads events from the associated EventReader
 // It returns the channel to retrieve events from
-func (r *SensorEventReader) Start() (<-chan *SensorEvent, error) {
+func (r *SensorEventReader) Start(ctx ctx.Context) (<-chan *SensorEvent, error) {
 
 	out := make(chan *SensorEvent)
 
@@ -38,52 +42,90 @@ func (r *SensorEventReader) Start() (<-chan *SensorEvent, error) {
 
 	go func() {
 	REDIAL:
-		for r.running {
-			// establish connection
-			for r.running {
-				err := r.reader.Dial()
-				if err != nil {
-					log.Errorf("Error connecting deCONZ websocket: %s\nAttempting reconnect in 5s...", err)
-					time.Sleep(10 * time.Second)
-				} else {
-					log.Infof("deCONZ websocket connected")
-					break
-				}
-			}
-			// read events until connection fails
-			for r.running {
-				e, err := r.reader.ReadEvent()
-				if err != nil {
-					if eerr, ok := err.(EventError); ok && eerr.Recoverable() {
-						log.Errorf("Dropping event due to error: %s", err)
+		for {
+			r.connect(ctx)
+
+			for {
+				select {
+				case <-ctx.Done():
+					log.Debug("Aborting websocket connection")
+					close(out)
+
+					default:
+					// read events until connection fails
+					e, err := r.reader.ReadEvent()
+					if err != nil {
+						if eerr, ok := err.(EventError); ok && eerr.Recoverable() {
+							log.Errorf("Dropping event due to error: %s", err)
+							continue
+						}
+						continue REDIAL
+					}
+
+					// we only care about sensor events
+					se, ok := e.(SensorEvent)
+					if !ok {
+						log.Debugf("Dropping non-sensor event type %s", e.Resource())
 						continue
 					}
-					continue REDIAL
-				}
 
-				// we only care about sensor events
-				se, ok := e.(SensorEvent)
-				if !ok {
-					log.Debugf("Dropping non-sensor event type %s", e.Resource())
-					continue
+					// send event on channel
+					out <- &se
 				}
-
-				// send event on channel
-				out <- &se
 			}
 		}
-		// if not running, close connection and return from goroutine
+
+	}()
+
+	return out, nil
+}
+
+// connect connects the EventReader
+// If the connection fails, it retries every 10s as long as the given Context is not Done()
+func (r *SensorEventReader) connect(ctx ctx.Context) {
+
+	ticker := time.NewTicker(10 * time.Second)
+	defer ticker.Stop()
+	for ; ; <-ticker.C {
+		select {
+		case <-ctx.Done():
+			log.Debug("Aborting websocket connection")
+		default:
+			err := r.reader.Dial(ctx)
+
+			if err != nil {
+				log.Errorf("Error connecting deCONZ websocket: %s\nAttempting reconnect in 10s...", err)
+			} else {
+				log.Infof("deCONZ websocket connected")
+				return
+
+			}
+		}
+	}
+}
+
+// Shutdown closes the reader, closing the connection to deCONZ
+// The method blocks until all background tasks are terminated or the given Context is aborted
+func (r *SensorEventReader) Shutdown(ctx ctx.Context) {
+	r.running = false
+
+	go func() {
 		err := r.reader.Close()
 		if err != nil {
 			log.Error("Failed to close websocket", err)
 			return
 		}
-		log.Infof("deCONZ websocket closed")
-	}()
-	return out, nil
-}
 
-// StopReadEvents closes the reader, closing the connection to deCONZ and terminating the goroutine
-func (r *SensorEventReader) StopReadEvents() {
-	r.running = false
+		log.Infof("deCONZ websocket closed")
+
+		r.done <- true
+		return
+	}()
+
+	select {
+	case <-ctx.Done():
+		return
+	case <-r.done:
+		return
+	}
 }

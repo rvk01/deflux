@@ -1,6 +1,7 @@
 package deconz
 
 import (
+	ctx "context"
 	"errors"
 	"fmt"
 	"github.com/gorilla/websocket"
@@ -16,8 +17,9 @@ type WsReader struct {
 }
 
 // Dial connects connects to the deCONZ websocket
+// The connection attempt is canceled with the given context.
 // Use ReadEvent to receive events
-func (r *WsReader) Dial() error {
+func (r *WsReader) Dial(ctx ctx.Context) error {
 
 	if r.sensorInfo == nil {
 		return errors.New("cannot dial without a sensorInfo to lookup events from")
@@ -25,7 +27,7 @@ func (r *WsReader) Dial() error {
 
 	// connect
 	var err error
-	r.conn, _, err = websocket.DefaultDialer.Dial(r.WebsocketAddr, nil)
+	r.conn, _, err = websocket.DefaultDialer.DialContext(ctx, r.WebsocketAddr, nil)
 	if err != nil {
 		return fmt.Errorf("unable to dail %s: %s", r.WebsocketAddr, err)
 	}
