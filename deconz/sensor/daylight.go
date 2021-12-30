@@ -1,13 +1,13 @@
 package sensor
 
-// Daylight represents a change in daylight
+// Daylight represents the state of a daylight sensor
 type Daylight struct {
 	State
 	Daylight bool
 	Status   int
 }
 
-// Fields returns timeseries data for influxdb
+// Fields implements the fielder interface and returns time series data for InfluxDB
 func (z *Daylight) Fields() map[string]interface{} {
 	return map[string]interface{}{
 		"daylight": z.Daylight,

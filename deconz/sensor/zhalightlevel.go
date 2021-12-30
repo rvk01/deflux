@@ -1,6 +1,6 @@
 package sensor
 
-// ZHALightLevel represents a LightLevel Sensor
+// ZHALightLevel represents the state of a light level sensor
 type ZHALightLevel struct {
 	State
 	Dark       bool
@@ -9,7 +9,7 @@ type ZHALightLevel struct {
 	Lux        int16
 }
 
-// Fields returns timeseries data for influxdb
+// Fields implements the fielder interface and returns time series data for InfluxDB
 func (z *ZHALightLevel) Fields() map[string]interface{} {
 	return map[string]interface{}{
 		"daylight":   z.Daylight,

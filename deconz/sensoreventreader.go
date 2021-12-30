@@ -21,7 +21,7 @@ type EventReader interface {
 type SensorEventReader struct {
 	reader  EventReader
 	running bool
-	done chan bool
+	done    chan bool
 }
 
 // Start starts a go routine that reads events from the associated EventReader
@@ -51,7 +51,7 @@ func (r *SensorEventReader) Start(ctx ctx.Context) (<-chan *SensorEvent, error) 
 					log.Debug("Aborting websocket connection")
 					close(out)
 
-					default:
+				default:
 					// read events until connection fails
 					e, err := r.reader.ReadEvent()
 					if err != nil {

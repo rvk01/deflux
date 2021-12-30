@@ -1,6 +1,6 @@
 package sensor
 
-// ZHAPower represents a Power Sensor
+// ZHAPower represents the state of a power sensor
 type ZHAPower struct {
 	State
 	Current int32
@@ -8,7 +8,7 @@ type ZHAPower struct {
 	Voltage int16
 }
 
-// Fields returns timeseries data for influxdb
+// Fields implements the fielder interface and returns time series data for InfluxDB
 func (z *ZHAPower) Fields() map[string]interface{} {
 	return map[string]interface{}{
 		"current": z.Current,

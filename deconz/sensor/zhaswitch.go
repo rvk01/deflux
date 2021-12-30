@@ -1,12 +1,12 @@
 package sensor
 
-// ZHASwitch represents a change from a button or switch
+// ZHASwitch represents the state of a button or switch
 type ZHASwitch struct {
 	State
 	Buttonevent int
 }
 
-// Fields returns timeseries data for influxdb
+// Fields implements the fielder interface and returns time series data for InfluxDB
 func (z *ZHASwitch) Fields() map[string]interface{} {
 	return map[string]interface{}{
 		"buttonevent": z.Buttonevent,

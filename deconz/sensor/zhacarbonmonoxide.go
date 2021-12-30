@@ -1,6 +1,6 @@
 package sensor
 
-// ZHACarbonMonoxide represents a CarbonMonoxide Sensor
+// ZHACarbonMonoxide represents the state of a carbon monoxide sensor
 type ZHACarbonMonoxide struct {
 	State
 	Carbonmonoxide bool
@@ -8,7 +8,7 @@ type ZHACarbonMonoxide struct {
 	Tampered       bool
 }
 
-// Fields returns timeseries data for influxdb
+// Fields implements the fielder interface and returns time series data for InfluxDB
 func (z *ZHACarbonMonoxide) Fields() map[string]interface{} {
 	return map[string]interface{}{
 		"CO":         z.Carbonmonoxide,

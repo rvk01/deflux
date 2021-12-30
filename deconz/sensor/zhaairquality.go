@@ -1,13 +1,13 @@
 package sensor
 
-// ZHAAirQuality represents a Air Quality Sensor
+// ZHAAirQuality represents the state of a an air quality sensor
 type ZHAAirQuality struct {
 	State
 	Airquality    string
 	AirqualityPPB int32
 }
 
-// Fields returns timeseries data for influxdb
+// Fields implements the fielder interface and returns time series data for InfluxDB
 func (z *ZHAAirQuality) Fields() map[string]interface{} {
 	return map[string]interface{}{
 		"airquality":    z.Airquality,

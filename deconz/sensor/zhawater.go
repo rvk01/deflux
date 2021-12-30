@@ -1,6 +1,6 @@
 package sensor
 
-// ZHAWater respresents a change from a flood sensor
+// ZHAWater represents the state of a flood sensor
 type ZHAWater struct {
 	State
 	Lowbattery bool
@@ -8,7 +8,7 @@ type ZHAWater struct {
 	Water      bool
 }
 
-// Fields returns timeseries data for influxdb
+// Fields implements the fielder interface and returns time series data for InfluxDB
 func (z *ZHAWater) Fields() map[string]interface{} {
 	return map[string]interface{}{
 		"lowbattery": z.Lowbattery,

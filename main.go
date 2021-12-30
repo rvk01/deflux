@@ -107,7 +107,7 @@ func main() {
 			log.Debugf("Received signal %s", sig)
 			cancel()
 
-			ctx, cancel := context.WithTimeout(context.Background(), 1 * time.Second)
+			ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
 			eventReader.Shutdown(ctx)
 			cancel()
 			done <- true

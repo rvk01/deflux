@@ -6,7 +6,7 @@ type ZHABattery struct {
 	Battery int16
 }
 
-// Fields returns timeseries data for influxdb
+// Fields implements the fielder interface and returns time series data for InfluxDB
 func (z *ZHABattery) Fields() map[string]interface{} {
 	return map[string]interface{}{
 		"battery": z.Battery,

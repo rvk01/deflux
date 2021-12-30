@@ -1,6 +1,6 @@
 package sensor
 
-// ZHAFire represents a change from a smoke detector
+// ZHAFire represents the state of a smoke detector
 type ZHAFire struct {
 	State
 	Fire       bool
@@ -8,7 +8,7 @@ type ZHAFire struct {
 	Tampered   bool
 }
 
-// Fields returns timeseries data for influxdb
+// Fields implements the fielder interface and returns time series data for InfluxDB
 func (z *ZHAFire) Fields() map[string]interface{} {
 	return map[string]interface{}{
 		"lowbattery": z.Lowbattery,

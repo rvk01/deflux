@@ -249,4 +249,5 @@ GOOS=linux GOARCH=arm GOARM=7 go build
 
 ## Resources
 
+- [deCONZ sensor state attributes](https://dresden-elektronik.github.io/deconz-rest-doc/endpoints/sensors/#supported-state-attributes_1)
 - [deCONZ websocket API docs](https://dresden-elektronik.github.io/deconz-rest-doc/endpoints/websocket/#message-fields)

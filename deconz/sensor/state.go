@@ -1,6 +1,7 @@
 package sensor
 
-// State is for embedding into event states
+// State contains properties that are provided by all sensors
+// It is embedded in specific sensors' State
 type State struct {
 	Lastupdated string
 }
