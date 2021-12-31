@@ -55,7 +55,7 @@ func (c *CachingSensorProvider) populateCache() error {
 		return err
 	}
 
-	log.Infof("SensorStore updated, found %d sensors", len((*c.cache)))
+	log.Infof("Sensor cache updated, found %d sensors", len((*c.cache)))
 
 	return nil
 }

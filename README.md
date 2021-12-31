@@ -54,28 +54,29 @@ provided some JSON test data as in [this test](deconz/event/event_test.go).
 
 ## Usage
 
-Start off by `go get`'ting deflux:
+Use `go get` to install the application.
 
-```
+```bash
 go get github.com/fixje/deflux
 ```
 
-deflux tries to read `$(pwd)/deflux.yml` or `/etc/deflux.yml` in that order, if both fails it will try to discover deCONZ with their webservice and output a configuration sample to stdout. 
+deflux requires a configuration file named `deflux.yml` in the current working directory or in `/etc/deflux.yml`. The
+current directory is preferred over `/etc`.
 
-Hint: if you've temporarily unlocked the deconz gateway, it should be able to fill in the api key by it self, this needs some testing though...
+Use `deflux -config-gen` to create such a file. Deflux tries to discover existing gateways in your network and print
+the config to `stdout`.
 
-First run generates a sample configuration:
-
+```bash
+deflux -config-gen > deflux.yml
 ```
-$ deflux
-ERRO[2021-12-26T11:28:03+01:00] no configuration could be found: could not read configuration:
-open /home/fixje/hacks/deflux/deflux.yml: no such file or directory
-open /etc/deflux.yml: no such file or directory 
-ERRO[2021-12-26T11:28:03+01:00] unable to pair with deconz: unable to pair with deconz: link button not pressed, please fill out APIKey manually 
-WARN[2021-12-26T11:28:03+01:00] Outputting default configuration, save this to /etc/deflux.yml 
+
+If you have temporarily unlocked the deCONZ gateway (Menu -> Settings -> Gateway -> Advanced -> "Authenticate app"),
+deflux should be able to fill in the API key automatically. The full configuration looks as follows:
+
+```yaml
 deconz:
-  addr: http://172.26.0.2:80/api
-  apikey: ""
+  addr: http://127.0.0.1/api
+  apikey: "123A4B5C67"
 influxdb:
   url: http://localhost:8086
   token: SECRET
@@ -83,11 +84,11 @@ influxdb:
   bucket: default
 ```
 
-Save the sample configuration and edit it to your needs, then run again. If you want to write to InfluxDB version 1, 
-see the section about [InfluxDB v1 configuration](#influx1compat).
+Edit the file according to your needs. If you want to write to InfluxDB version 1, see the section about
+[InfluxDB v1 configuration](#influx1compat).
 
 The default log level of the application is `warning`. You can set the
-`-loglevel=` flag to make it a bit more verbose:
+`-loglevel=` flag to make it a more verbose:
 
 ```
 $ ./deflux -loglevel=debug

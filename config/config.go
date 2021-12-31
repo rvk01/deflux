@@ -77,19 +77,22 @@ func OutputDefaultConfiguration() {
 	if err == nil {
 		apikey, err := deconz.Pair(*u)
 		if err != nil {
-			log.Errorf("unable to pair with deconz: %s, please fill out APIKey manually", err)
+
+			if _, err := fmt.Fprintf(os.Stderr, "## Could not pair with deconz: %s\n", err); err != nil {
+				panic(err)
+			}
+			if _, err := fmt.Fprintln(os.Stderr, "## Please add the API key manually"); err != nil {
+				panic(err)
+			}
 		}
 		c.Deconz.APIKey = string(apikey)
 	}
 
-	// we need to use a proxy struct to encode yml as the influxdb influxdb2 configuration struct
-	// includes a Proxy: func() field that the yml encoder cannot handle
 	yml, err := yaml.Marshal(c)
 	if err != nil {
-		log.Fatalf("unable to generate default configuration: %s", err)
+		log.Fatalf("Unable to generate default configuration: %s", err)
 	}
 
-	log.Warning("Outputting default configuration, save this to /etc/deflux.yml")
 	// to stdout
 	fmt.Print(string(yml))
 }
@@ -109,20 +112,31 @@ func defaultConfiguration() *Configuration {
 		},
 	}
 
-	// lets see if we are able to discover a gateway, and overwrite parts of the
+	// let's see if we are able to discover a gateway, and overwrite parts of the
 	// default congfiguration
 	discovered, err := deconz.Discover()
 	if err != nil {
-		log.Errorf("discovery of deconz gateway failed: %s, please fill configuration manually..", err)
+		if _, err1 := fmt.Fprintf(os.Stderr, "## deCONZ Gateway discovery failed: %s. Complete config manually.\n", err); err1 != nil {
+			panic(err1)
+		}
 		return &c
 	}
 
-	// TODO: discover is actually a slice of multiple discovered gateways,
-	// but for now we use only the first available
-	deconz := discovered[0]
+	if len(discovered) > 1 {
+		if _, err1 := fmt.Fprintln(os.Stderr, "## Found multiple  gateways, using the first for the configuration"); err1 != nil {
+			panic(err1)
+		}
+		for i, di := range discovered {
+			if _, err1 := fmt.Fprintf(os.Stderr, "### %d - http://%s:%d\n", i+1, di.InternalIPAddress, di.InternalPort); err1 != nil {
+				panic(err1)
+			}
+		}
+	}
+
+	d := discovered[0]
 	addr := url.URL{
 		Scheme: "http",
-		Host:   fmt.Sprintf("%s:%d", deconz.InternalIPAddress, deconz.InternalPort),
+		Host:   fmt.Sprintf("%s:%d", d.InternalIPAddress, d.InternalPort),
 		Path:   "/api",
 	}
 	c.Deconz.Addr = addr.String()

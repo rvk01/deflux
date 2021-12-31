@@ -17,6 +17,7 @@ import (
 
 func main() {
 	flagLoglevel := flag.String("loglevel", "warning", "debug | error | warning | info")
+	flagConfig := flag.Bool("config-gen", false, "generates a default config and prints it to stdout")
 	flag.Parse()
 
 	level, err := log.ParseLevel(*flagLoglevel)
@@ -29,6 +30,11 @@ func main() {
 		FullTimestamp: true,
 	})
 
+	if *flagConfig {
+		config.OutputDefaultConfiguration()
+		return
+	}
+
 	ctx1, cancel := context.WithCancel(context.Background())
 	done := make(chan bool, 1)
 	sigsCh := make(chan os.Signal, 1)
@@ -36,12 +42,11 @@ func main() {
 
 	cfg, err := config.LoadConfiguration()
 	if err != nil {
-		log.Errorf("no configuration could be found: %s", err)
-		config.OutputDefaultConfiguration()
-		return
+		log.Errorf("No config file: %s", err)
+		os.Exit(2)
 	}
 
-	eventReader, err := sensorEventChan(cfg.Deconz)
+	eventReader, err := eventReader(cfg.Deconz)
 	if err != nil {
 		panic(err)
 	}
@@ -119,7 +124,7 @@ func main() {
 	log.Info("Exiting")
 }
 
-func sensorEventChan(c deconz.Config) (*deconz.SensorEventReader, error) {
+func eventReader(c deconz.Config) (*deconz.SensorEventReader, error) {
 	// get an event reader from the API
 	d := deconz.API{Config: c}
 	store, err := deconz.NewCachingSensorProvider(d)
@@ -128,13 +133,13 @@ func sensorEventChan(c deconz.Config) (*deconz.SensorEventReader, error) {
 		return nil, err
 	}
 
-	reader, err := deconz.CreateWsReader(d, store)
+	ws, err := deconz.CreateWsReader(d, store)
 	if err != nil {
 		return nil, err
 	}
 
-	// create a new reader, embedding the event reader
-	sensorEventReader := deconz.CreateSensorEventReader(reader)
+	// create a new SensorEventReader using the websocket connection
+	sensorEventReader := deconz.CreateSensorEventReader(ws)
 
 	// start it, it starts its own thread
 	return sensorEventReader, nil
