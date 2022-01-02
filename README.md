@@ -28,36 +28,42 @@ Note that writing to InfluxDB v1 is still possible. See the section about
 
 ## Supported Sensors
 
-The application supports the following types of [sensors](https://dresden-elektronik.github.io/deconz-rest-doc/endpoints/sensors/#supported-state-attributes_1):
+The application fully supports the following types of [sensors](https://dresden-elektronik.github.io/deconz-rest-doc/endpoints/sensors/#supported-state-attributes_1):
 
 - Daylight
-- CLIPPresence (_EXPERIMENTAL_)
-- ZHAAirQuality (_EXPERIMENTAL_)
-- ZHABattery (_EXPERIMENTAL_)
-- ZHACarbonMonoxide (_EXPERIMENTAL_)
-- ZHAConsumption (_EXPERIMENTAL_)
 - ZHAFire
 - ZHAHumidity
-- ZHALightLevel (_EXPERIMENTAL_)
-- ZHAOpenClose (_EXPERIMENTAL_)
-- ZHAPower (_EXPERIMENTAL_)
-- ZHAPresence (_EXPERIMENTAL_)
-- ZHAPressure (_EXPERIMENTAL_)
 - ZHASwitch
 - ZHATemperature
-- ZHAVibration (_EXPERIMENTAL_)
 - ZHAWater
 
-Sensors marked as _EXPERIMENTAL_ lack proper tests. If you are in posession of such a sensor, it would be nice if you
-provided some JSON test data as in [this test](deconz/event/event_test.go).
+The following sensors are mostly or partially implemented according to the
+[spec](https://dresden-elektronik.github.io/deconz-rest-doc/endpoints/sensors/#supported-state-attributes_1),
+but lack proper tests:
+
+- CLIPPresence
+- ZHAAirQuality
+- ZHAAlarm
+- ZHABattery
+- ZHACarbonMonoxide
+- ZHAConsumption
+- ZHALightLevel
+- ZHAOpenClose
+- ZHAPower
+- ZHAPresence
+- ZHAPressure
+- ZHAVibration
+
+If you own such a sensor, it would be nice if you could provide some JSON test data as in
+[this test](deconz/event/event_test.go).
 
 
 ## Usage
 
-Use `go get` to install the application.
+Use `go install` to install the application.
 
 ```bash
-go get github.com/fixje/deflux
+go install github.com/fixje/deflux
 ```
 
 deflux requires a configuration file named `deflux.yml` in the current working directory or in `/etc/deflux.yml`. The

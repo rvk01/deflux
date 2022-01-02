@@ -1,18 +1,18 @@
 package sensor
 
-// ZHAPresence represents the state of a presence Sensor
-type ZHAPresence struct {
+// ZHAAlarm represents the state of an alarm sensor
+type ZHAAlarm struct {
 	State
-	Presence   bool
 	Lowbattery bool
 	Tampered   bool
+	Alarm      bool
 }
 
 // Fields implements the fielder interface and returns time series data for InfluxDB
-func (z *ZHAPresence) Fields() map[string]interface{} {
+func (z *ZHAAlarm) Fields() map[string]interface{} {
 	return map[string]interface{}{
 		"lowbattery": z.Lowbattery,
 		"tampered":   z.Tampered,
-		"presence":   z.Presence,
+		"alarm":      z.Alarm,
 	}
 }

@@ -1,6 +1,7 @@
 package sensor
 
 // ZHAVibration represents the state of a vibration sensor
+// TODO not sure if int or float: orientation, tiltangle, vibrationstrength
 type ZHAVibration struct {
 	State
 	Vibration bool

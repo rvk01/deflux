@@ -4,7 +4,7 @@ package sensor
 type ZHAAirQuality struct {
 	State
 	Airquality    string
-	AirqualityPPB int32
+	AirqualityPPB uint16
 }
 
 // Fields implements the fielder interface and returns time series data for InfluxDB
