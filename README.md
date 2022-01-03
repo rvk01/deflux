@@ -55,7 +55,7 @@ but lack proper tests:
 - ZHAVibration
 
 If you own such a sensor, it would be nice if you could provide some JSON test data as in
-[this test](deconz/event/event_test.go).
+[this test](deconz/event_test.go).
 
 
 ## Usage

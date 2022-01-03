@@ -21,27 +21,26 @@ const floodDetectorFloodDetectedEventPayload = `{ "e": "changed", "id": "6", "r"
 // xiaomi random switch "sensor"
 const switchSensorEventPayload = `{	"e": "changed",	"id": "7",	"r": "sensors",	"state": {	  "buttonevent": 1000,	  "lastupdated": "2018-03-20T20:52:18"	},	"t": "event"  }  `
 
-type LookupImpl struct {
+type TestSensorProvider struct {
 	Store *Sensors
 }
 
-func (l LookupImpl) Sensor(i int) (*Sensor, error) {
+func (l TestSensorProvider) Sensor(i int) (*Sensor, error) {
 	if s, ok := (*l.Store)[i]; ok {
 		return &s, nil
 	}
 	return nil, errors.New("not found")
 }
 
-func (l LookupImpl) Sensors() (*Sensors, error) {
+func (l TestSensorProvider) Sensors() (*Sensors, error) {
 	return l.Store, nil
 }
 
 var sensorInfo SensorProvider
 
-// FIXME init?
 func TestMain(m *testing.M) {
 
-	sensorInfo = LookupImpl{Store: &Sensors{
+	sensorInfo = TestSensorProvider{Store: &Sensors{
 		1: Sensor{Type: "ZHATemperature", Name: "ZHATemperature"},
 		2: Sensor{Type: "ZHAHumidity", Name: "ZHAHumidity"},
 		3: Sensor{Type: "ZHAPressure", Name: "ZHAPressure"},

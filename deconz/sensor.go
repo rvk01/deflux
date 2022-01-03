@@ -37,6 +37,10 @@ type fielder interface {
 
 // Timeseries returns tags and fields for use in InfluxDB
 func (s *SensorEvent) Timeseries() (map[string]string, map[string]interface{}, error) {
+	if s.Event == nil || s.Event.State() == nil {
+		return nil, nil, fmt.Errorf("event is empty: %v", s)
+	}
+
 	f, ok := s.Event.State().(fielder)
 	if !ok {
 		return nil, nil, fmt.Errorf("this event (%T:%s) has no time series data", s.State, s.Name)

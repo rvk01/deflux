@@ -50,27 +50,6 @@ func (a *API) Sensors() (*Sensors, error) {
 	return &sensors, nil
 }
 
-// CreateWsReader creates a WsReader which consumes events from the deCONZ websocket interface
-// It uses the API to discover the websocket address
-// The structure of the JSON messages from the websocket depend on the resource/sensor type. Thus,
-// the WsReader requires a SensorProvider to properly unmarshal those messages.
-func CreateWsReader(api API, si SensorProvider) (*WsReader, error) {
-
-	if api.Config.wsAddr == "" {
-		err := api.Config.discoverWebsocket()
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return &WsReader{sensorInfo: si, WebsocketAddr: api.Config.wsAddr}, nil
-}
-
-// CreateSensorEventReader creates a new SensorEventReader that continuously reads events from the given WsReader
-func CreateSensorEventReader(r *WsReader) *SensorEventReader {
-	return &SensorEventReader{reader: r, done: make(chan bool, 1)}
-}
-
 // discoverWebsocket tries to retrieve the websocket address from the deCONZ REST API
 // using the /config endpoint
 func (c *Config) discoverWebsocket() error {

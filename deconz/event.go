@@ -70,7 +70,7 @@ func DecodeEvent(sp SensorProvider, b []byte) (Event, error) {
 		return nil, fmt.Errorf("unable to get sensor with id %d: %s", e.ID, err)
 	}
 
-	err = e.DecodeState(s.Type)
+	err = e.DecodeSensorState(s.Type)
 	if err != nil {
 		return nil, fmt.Errorf("unable to decode state: %s", err)
 	}
@@ -78,9 +78,9 @@ func DecodeEvent(sp SensorProvider, b []byte) (Event, error) {
 	return SensorEvent{Sensor: s, Event: e}, nil
 }
 
-// DecodeState tries to unmarshal the appropriate state based
+// DecodeSensorState tries to unmarshal the appropriate state based
 // on looking up the id though the SensorProvider
-func (e *DeconzEvent) DecodeState(t string) error {
+func (e *DeconzEvent) DecodeSensorState(t string) error {
 
 	var err error
 
