@@ -30,9 +30,17 @@ Note that writing to InfluxDB v1 is still possible. See the section about
 
 The application fully supports the following types of [sensors](https://dresden-elektronik.github.io/deconz-rest-doc/endpoints/sensors/#supported-state-attributes_1):
 
+- CLIPPresence
 - Daylight
+- ZHAAirQuality
+- ZHABattery
+- ZHAConsumption
 - ZHAFire
 - ZHAHumidity
+- ZHALightLevel
+- ZHAOpenClose
+- ZHAPower
+- ZHAPressure
 - ZHASwitch
 - ZHATemperature
 - ZHAWater
@@ -41,21 +49,14 @@ The following sensors are mostly or partially implemented according to the
 [spec](https://dresden-elektronik.github.io/deconz-rest-doc/endpoints/sensors/#supported-state-attributes_1),
 but lack proper tests:
 
-- CLIPPresence
-- ZHAAirQuality
 - ZHAAlarm
-- ZHABattery
 - ZHACarbonMonoxide
-- ZHAConsumption
-- ZHALightLevel
-- ZHAOpenClose
-- ZHAPower
 - ZHAPresence
-- ZHAPressure
 - ZHAVibration
 
 If you own such a sensor, it would be nice if you could provide some JSON test data as in
-[this test](deconz/event_test.go).
+[this test](deconz/event_test.go). You can retrieve that data either with `debug` logging enabled in deflux, or,
+using the `/sensors` endpoint of the REST API.
 
 
 ## Usage
