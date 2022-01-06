@@ -7,8 +7,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// CachingSensorProvider is a SensorProvider that retrieves sensor info from the dCONZ REST API and caches results
-// It is the default SensorProvider
+// CachingSensorProvider is a sensor.Provider that retrieves sensor info from the dCONZ REST API and caches results
+// It is the default sensor.Provider
 type CachingSensorProvider struct {
 	api   API
 	cache *sensor.Sensors

@@ -76,7 +76,7 @@ func (e DeconzEvent) State() interface{} {
 }
 
 // DecodeEvent parses events from bytes
-func DecodeEvent(sp sensor.SensorProvider, b []byte) (Event, error) {
+func DecodeEvent(sp sensor.Provider, b []byte) (Event, error) {
 	var e DeconzEvent
 	err := json.Unmarshal(b, &e)
 	if err != nil {

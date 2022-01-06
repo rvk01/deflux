@@ -14,7 +14,7 @@ import (
 // The WebsocketEventReader handles connection losses and reconnection attempts of the underlying EventReader
 type WebsocketEventReader struct {
 	WebsocketAddr  string
-	SensorProvider sensor.SensorProvider
+	SensorProvider sensor.Provider
 
 	conn    *websocket.Conn
 	connCtx ctx.Context
@@ -24,8 +24,8 @@ type WebsocketEventReader struct {
 // NewWebsocketEventReader creates a new WebsocketEventReader that continuously reads events from the deCONZ websocket
 // It uses the API to discover the websocket address
 // The structure of the JSON messages from the websocket depend on the resource/sensor type. Thus,
-// the WsReader requires a SensorProvider to properly unmarshal those messages.
-func NewWebsocketEventReader(api API, si sensor.SensorProvider) (*WebsocketEventReader, error) {
+// the WsReader requires a sensor.Provider to properly unmarshal those messages.
+func NewWebsocketEventReader(api API, si sensor.Provider) (*WebsocketEventReader, error) {
 	if api.Config.WsAddr == "" {
 		err := api.Config.DiscoverWebsocket()
 		if err != nil {
@@ -105,7 +105,7 @@ func (r *WebsocketEventReader) connect() {
 		default:
 
 			if r.SensorProvider == nil {
-				panic("cannot dial without a SensorProvider")
+				panic("cannot dial without a sensor.Provider")
 			}
 
 			if r.conn != nil {

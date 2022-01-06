@@ -8,8 +8,8 @@ import (
 // Sensors is a map of sensors indexed by their id
 type Sensors map[int]Sensor
 
-// SensorProvider provides information about sensors
-type SensorProvider interface {
+// Provider provides information about sensors
+type Provider interface {
 	// Sensors provides info about all known sensors
 	Sensors() (*Sensors, error)
 

@@ -23,7 +23,7 @@ func (l TestSensorProvider) Sensors() (*sensor.Sensors, error) {
 	return l.Store, nil
 }
 
-var sensorInfo sensor.SensorProvider
+var sensorInfo sensor.Provider
 
 func TestMain(m *testing.M) {
 
