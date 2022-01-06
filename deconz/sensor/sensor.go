@@ -23,8 +23,16 @@ type Sensor struct {
 	Type     string `json:"type"`
 	Name     string `json:"name"`
 	LastSeen string `json:"lastseen"`
-	RawState    json.RawMessage `json:"state"`
+
+	RawState json.RawMessage `json:"state"`
 	StateDef interface{}
+
+	Config Config
+}
+
+type Config struct {
+	// Battery state in percent; not present for all sensors
+	Battery uint32 `json:"battery"`
 }
 
 // State contains properties that are provided by all sensors
