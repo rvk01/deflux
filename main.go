@@ -118,7 +118,7 @@ func main() {
 	log.Info("Exiting")
 }
 
-func eventReader(c deconz.Config) (*deconz.WebsocketEventReader, error) {
+func eventReader(c config.ApiConfig) (*deconz.WebsocketEventReader, error) {
 	api := deconz.API{Config: c}
 	store, err := deconz.NewCachingSensorProvider(api)
 

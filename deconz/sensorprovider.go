@@ -3,6 +3,7 @@ package deconz
 import (
 	"errors"
 	"fmt"
+	"github.com/fixje/deflux/deconz/sensor"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -10,7 +11,7 @@ import (
 // It is the default SensorProvider
 type CachingSensorProvider struct {
 	api   API
-	cache *Sensors
+	cache *sensor.Sensors
 }
 
 var sensorProvider *CachingSensorProvider
@@ -36,7 +37,7 @@ func NewCachingSensorProvider(api API) (*CachingSensorProvider, error) {
 // TODO use "enum": https://stackoverflow.com/questions/14426366/what-is-an-idiomatic-way-of-representing-enums-in-go
 
 // Sensor returns a sensor for a sensor id
-func (c *CachingSensorProvider) Sensor(i int) (*Sensor, error) {
+func (c *CachingSensorProvider) Sensor(i int) (*sensor.Sensor, error) {
 	if s, found := (*c.cache)[i]; found {
 		return &s, nil
 	}
@@ -44,7 +45,7 @@ func (c *CachingSensorProvider) Sensor(i int) (*Sensor, error) {
 	return nil, errors.New("no such sensor")
 }
 
-func (c *CachingSensorProvider) Sensors() (*Sensors, error) {
+func (c *CachingSensorProvider) Sensors() (*sensor.Sensors, error) {
 	return c.cache, nil
 }
 

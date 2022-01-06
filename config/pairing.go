@@ -1,4 +1,4 @@
-package deconz
+package config
 
 import (
 	"bytes"

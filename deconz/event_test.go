@@ -9,39 +9,39 @@ import (
 )
 
 type TestSensorProvider struct {
-	Store *Sensors
+	Store *sensor.Sensors
 }
 
-func (l TestSensorProvider) Sensor(i int) (*Sensor, error) {
+func (l TestSensorProvider) Sensor(i int) (*sensor.Sensor, error) {
 	if s, ok := (*l.Store)[i]; ok {
 		return &s, nil
 	}
 	return nil, errors.New("not found")
 }
 
-func (l TestSensorProvider) Sensors() (*Sensors, error) {
+func (l TestSensorProvider) Sensors() (*sensor.Sensors, error) {
 	return l.Store, nil
 }
 
-var sensorInfo SensorProvider
+var sensorInfo sensor.SensorProvider
 
 func TestMain(m *testing.M) {
 
-	sensorInfo = TestSensorProvider{Store: &Sensors{
-		1:  Sensor{Type: "ZHATemperature", Name: "ZHATemperature"},
-		2:  Sensor{Type: "ZHAHumidity", Name: "ZHAHumidity"},
-		3:  Sensor{Type: "ZHAPressure", Name: "ZHAPressure"},
-		5:  Sensor{Type: "ZHAFire", Name: "ZHAFire"},
-		6:  Sensor{Type: "ZHAWater", Name: "ZHAWater"},
-		7:  Sensor{Type: "ZHASwitch", Name: "ZHASwitch"},
-		8:  Sensor{Type: "ZHAOpenClose", Name: "ZHAOpenClose"},
-		9:  Sensor{Type: "ZHAOpenClose", Name: "ZHAOpenClose"},
-		10: Sensor{Type: "ZHABattery", Name: "ZHABattery"},
-		11: Sensor{Type: "ZHAConsumption", Name: "ZHAConsumption"},
-		12: Sensor{Type: "CLIPPresence", Name: "CLIPPresence"},
-		13: Sensor{Type: "ZHAPower", Name: "ZHAPower"},
-		14: Sensor{Type: "ZHALightLevel", Name: "ZHALightLevel"},
-		15: Sensor{Type: "ZHAAirQuality", Name: "ZHAAirQuality"},
+	sensorInfo = TestSensorProvider{Store: &sensor.Sensors{
+		1:  sensor.Sensor{Type: "ZHATemperature", Name: "ZHATemperature"},
+		2:  sensor.Sensor{Type: "ZHAHumidity", Name: "ZHAHumidity"},
+		3:  sensor.Sensor{Type: "ZHAPressure", Name: "ZHAPressure"},
+		5:  sensor.Sensor{Type: "ZHAFire", Name: "ZHAFire"},
+		6:  sensor.Sensor{Type: "ZHAWater", Name: "ZHAWater"},
+		7:  sensor.Sensor{Type: "ZHASwitch", Name: "ZHASwitch"},
+		8:  sensor.Sensor{Type: "ZHAOpenClose", Name: "ZHAOpenClose"},
+		9:  sensor.Sensor{Type: "ZHAOpenClose", Name: "ZHAOpenClose"},
+		10: sensor.Sensor{Type: "ZHABattery", Name: "ZHABattery"},
+		11: sensor.Sensor{Type: "ZHAConsumption", Name: "ZHAConsumption"},
+		12: sensor.Sensor{Type: "CLIPPresence", Name: "CLIPPresence"},
+		13: sensor.Sensor{Type: "ZHAPower", Name: "ZHAPower"},
+		14: sensor.Sensor{Type: "ZHALightLevel", Name: "ZHALightLevel"},
+		15: sensor.Sensor{Type: "ZHAAirQuality", Name: "ZHAAirQuality"},
 	}}
 
 	os.Exit(m.Run())

@@ -4,6 +4,7 @@ import (
 	ctx "context"
 	"errors"
 	"fmt"
+	"github.com/fixje/deflux/deconz/sensor"
 	"github.com/gorilla/websocket"
 	log "github.com/sirupsen/logrus"
 	"time"
@@ -13,7 +14,7 @@ import (
 // The WebsocketEventReader handles connection losses and reconnection attempts of the underlying EventReader
 type WebsocketEventReader struct {
 	WebsocketAddr  string
-	SensorProvider SensorProvider
+	SensorProvider sensor.SensorProvider
 
 	conn    *websocket.Conn
 	connCtx ctx.Context
@@ -24,16 +25,16 @@ type WebsocketEventReader struct {
 // It uses the API to discover the websocket address
 // The structure of the JSON messages from the websocket depend on the resource/sensor type. Thus,
 // the WsReader requires a SensorProvider to properly unmarshal those messages.
-func NewWebsocketEventReader(api API, si SensorProvider) (*WebsocketEventReader, error) {
-	if api.Config.wsAddr == "" {
-		err := api.Config.discoverWebsocket()
+func NewWebsocketEventReader(api API, si sensor.SensorProvider) (*WebsocketEventReader, error) {
+	if api.Config.WsAddr == "" {
+		err := api.Config.DiscoverWebsocket()
 		if err != nil {
 			return nil, err
 		}
 	}
 
 	return &WebsocketEventReader{
-		WebsocketAddr:  api.Config.wsAddr,
+		WebsocketAddr:  api.Config.WsAddr,
 		SensorProvider: si,
 	}, nil
 }

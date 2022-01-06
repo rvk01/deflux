@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/fixje/deflux/deconz/sensor"
+	"strconv"
 )
 
 type Event interface {
@@ -11,6 +12,31 @@ type Event interface {
 	Resource() string
 	Id() int
 	State() interface{}
+}
+
+// SensorEvent is an Event triggered by a Sensor
+type SensorEvent struct {
+	*sensor.Sensor
+	Event
+}
+
+// fielder is an interface that provides fields for InfluxDB
+type fielder interface {
+	Fields() map[string]interface{}
+}
+
+// Timeseries returns tags and fields for use in InfluxDB
+func (s *SensorEvent) Timeseries() (map[string]string, map[string]interface{}, error) {
+	if s.Event == nil || s.Event.State() == nil {
+		return nil, nil, fmt.Errorf("event is empty: %v", s)
+	}
+
+	f, ok := s.Event.State().(fielder)
+	if !ok {
+		return nil, nil, fmt.Errorf("this event (%T:%s) has no time series data", s.State, s.Name)
+	}
+
+	return map[string]string{"name": s.Name, "type": s.Sensor.Type, "id": strconv.Itoa(s.Event.Id())}, f.Fields(), nil
 }
 
 // DeconzEvent is a message received over the deCONZ websocket
@@ -25,6 +51,7 @@ type DeconzEvent struct {
 	ResourceName string `json:"r"`
 	ID           int    `json:"id,string"`
 
+	// TODO intermediate type
 	// only for e = 'changed'
 	RawState json.RawMessage `json:"state"`
 
@@ -49,7 +76,7 @@ func (e DeconzEvent) State() interface{} {
 }
 
 // DecodeEvent parses events from bytes
-func DecodeEvent(sp SensorProvider, b []byte) (Event, error) {
+func DecodeEvent(sp sensor.SensorProvider, b []byte) (Event, error) {
 	var e DeconzEvent
 	err := json.Unmarshal(b, &e)
 	if err != nil {
@@ -70,109 +97,11 @@ func DecodeEvent(sp SensorProvider, b []byte) (Event, error) {
 		return nil, fmt.Errorf("unable to get sensor with id %d: %s", e.ID, err)
 	}
 
-	err = e.DecodeSensorState(s.Type)
+	state, err := sensor.DecodeSensorState(e.RawState, s.Type)
 	if err != nil {
 		return nil, fmt.Errorf("unable to decode state: %s", err)
 	}
+	e.StateDef = state
 
 	return SensorEvent{Sensor: s, Event: e}, nil
-}
-
-// DecodeSensorState tries to unmarshal the appropriate state based
-// on looking up the id though the SensorProvider
-func (e *DeconzEvent) DecodeSensorState(t string) error {
-
-	var err error
-
-	switch t {
-	case "CLIPPresence":
-		var s sensor.CLIPPresence
-		err = json.Unmarshal(e.RawState, &s)
-		e.StateDef = &s
-		break
-	case "Daylight":
-		var s sensor.Daylight
-		err = json.Unmarshal(e.RawState, &s)
-		e.StateDef = &s
-		break
-	case "ZHAAirQuality":
-		var s sensor.ZHAAirQuality
-		err = json.Unmarshal(e.RawState, &s)
-		e.StateDef = &s
-		break
-	case "ZHABattery":
-		var s sensor.ZHABattery
-		err = json.Unmarshal(e.RawState, &s)
-		e.StateDef = &s
-		break
-	case "ZHACarbonMonoxide":
-		var s sensor.ZHACarbonMonoxide
-		err = json.Unmarshal(e.RawState, &s)
-		e.StateDef = &s
-		break
-	case "ZHAConsumption":
-		var s sensor.ZHAConsumption
-		err = json.Unmarshal(e.RawState, &s)
-		e.StateDef = &s
-		break
-	case "ZHAFire":
-		var s sensor.ZHAFire
-		err = json.Unmarshal(e.RawState, &s)
-		e.StateDef = &s
-		break
-	case "ZHAHumidity":
-		var s sensor.ZHAHumidity
-		err = json.Unmarshal(e.RawState, &s)
-		e.StateDef = &s
-		break
-	case "ZHALightLevel":
-		var s sensor.ZHALightLevel
-		err = json.Unmarshal(e.RawState, &s)
-		e.StateDef = &s
-		break
-	case "ZHAOpenClose":
-		var s sensor.ZHAOpenClose
-		err = json.Unmarshal(e.RawState, &s)
-		e.StateDef = &s
-		break
-	case "ZHAPower":
-		var s sensor.ZHAPower
-		err = json.Unmarshal(e.RawState, &s)
-		e.StateDef = &s
-		break
-	case "ZHAPresence":
-		var s sensor.ZHAPresence
-		err = json.Unmarshal(e.RawState, &s)
-		e.StateDef = &s
-		break
-	case "ZHAPressure":
-		var s sensor.ZHAPressure
-		err = json.Unmarshal(e.RawState, &s)
-		e.StateDef = &s
-		break
-	case "ZHASwitch":
-		var s sensor.ZHASwitch
-		err = json.Unmarshal(e.RawState, &s)
-		e.StateDef = &s
-		break
-	case "ZHATemperature":
-		var s sensor.ZHATemperature
-		err = json.Unmarshal(e.RawState, &s)
-		e.StateDef = &s
-		break
-	case "ZHAVibration":
-		var s sensor.ZHAVibration
-		err = json.Unmarshal(e.RawState, &s)
-		e.StateDef = &s
-		break
-	case "ZHAWater":
-		var s sensor.ZHAWater
-		err = json.Unmarshal(e.RawState, &s)
-		e.StateDef = &s
-		break
-	default:
-		err = fmt.Errorf("%s is not a known sensor type", t)
-	}
-
-	return err
 }

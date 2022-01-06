@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	"github.com/fixje/deflux/deconz"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
@@ -23,7 +22,7 @@ type InfluxDB struct {
 
 // Configuration holds data for Deconz and influxdb configuration
 type Configuration struct {
-	Deconz   deconz.Config
+	Deconz   ApiConfig
 	InfluxDB InfluxDB
 }
 
@@ -75,7 +74,7 @@ func OutputDefaultConfiguration() {
 	// try to pair with deconz
 	u, err := url.Parse(c.Deconz.Addr)
 	if err == nil {
-		apikey, err := deconz.Pair(*u)
+		apikey, err := Pair(*u)
 		if err != nil {
 
 			if _, err := fmt.Fprintf(os.Stderr, "## Could not pair with deconz: %s\n", err); err != nil {
@@ -100,7 +99,7 @@ func OutputDefaultConfiguration() {
 func defaultConfiguration() *Configuration {
 	// this is the default configuration
 	c := Configuration{
-		Deconz: deconz.Config{
+		Deconz: ApiConfig{
 			Addr:   "http://127.0.0.1:8080/",
 			APIKey: "change me",
 		},
@@ -114,7 +113,7 @@ func defaultConfiguration() *Configuration {
 
 	// let's see if we are able to discover a gateway, and overwrite parts of the
 	// default congfiguration
-	discovered, err := deconz.Discover()
+	discovered, err := Discover()
 	if err != nil {
 		if _, err1 := fmt.Fprintf(os.Stderr, "## deCONZ Gateway discovery failed: %s. Complete config manually.\n", err); err1 != nil {
 			panic(err1)
