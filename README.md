@@ -119,8 +119,15 @@ into account, so be aware! We are planning to find a solution for this problem i
 
 ## InfluxDB
 
-Sensor values are added as InfluxDB values and tagged with sensor type, id and name.
-Different event types are stored in different measurements, meaning you will end up with multiple InfluxDB measurements.
+Sensor measurements are added as InfluxDB field values and tagged with sensor type, id and name. In addition to that,
+a tag `source` indicates if the value has been obtained live via the websocket or the REST API (_pull-once-mode_).
+Different event types are stored in different measurements, meaning you will end up with one InfluxDB measurement per
+sensor type.
+
+For some sensors, deCONZ provides battery status in the `config` object of the REST API's `sensors` endpoint.
+The information is not pushed via the websocket. However, deflux inserts the last battery state retrieved from
+the REST API as an additional field along with sensor measurements. For sensors where the information is not available,
+the battery status is set to `0`.
 
 
 ### InfluxDB Version 2
@@ -172,6 +179,7 @@ Table: keys: []
                     id
                   name
                   type
+                source
 ```
 
 #### Example Queries
@@ -245,11 +253,12 @@ Here is an example how to retrieve pressure values:
 
 ```
 > select * from deflux_ZHAPressure;
-name: deflux_ZHAPressure
-time                id name  pressure type
-----                -- ----  -------- ----
-1640699399114005127 4  th-sz 987      ZHAPressure
-1640699409416247640 4  th-sz 987      ZHAPressure
+time                battery id name  pressure source    type
+----                ------- -- ----  -------- ------    ----
+1641727554442270164 95      4  th-sz 993      rest      ZHAPressure
+1641728526808217267 95      4  th-sz 993      rest      ZHAPressure
+1641729979208970180 95      4  th-sz 994      websocket ZHAPressure
+1641730180633580793 95      4  th-sz 993      websocket ZHAPressure
 ...
 ```
 

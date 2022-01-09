@@ -51,7 +51,7 @@ func (a *API) Sensors() (*sensor.Sensors, error) {
 		}
 
 		sensors[id] = s
-		log.Debugf("got sensor: %v", s)
+		log.Debugf("got sensor: %v, state: %v", s, s.StateDef)
 	}
 
 	return &sensors, nil

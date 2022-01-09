@@ -57,7 +57,6 @@ type State struct {
 // EmptyState is an empty struct used to indicate no state was parsed
 type EmptyState struct{}
 
-
 // Timeseries returns tags and fields for use in InfluxDB
 func (s *Sensor) Timeseries() (map[string]string, map[string]interface{}, error) {
 	f, ok := s.StateDef.(Fielder)
@@ -65,7 +64,16 @@ func (s *Sensor) Timeseries() (map[string]string, map[string]interface{}, error)
 		return nil, nil, fmt.Errorf("this sensor (%T:%s) has no time series data", s.StateDef, s.Name)
 	}
 
-	return map[string]string{"name": s.Name, "type": s.Type, "id": strconv.Itoa(s.Id), "source": "rest"}, f.Fields(), nil
+	fields := f.Fields()
+	fields["battery"] = int(s.Config.Battery)
+
+	return map[string]string{
+			"name":   s.Name,
+			"type":   s.Type,
+			"id":     strconv.Itoa(s.Id),
+			"source": "rest"},
+		fields,
+		nil
 }
 
 // DecodeSensorState tries to unmarshal the appropriate state based

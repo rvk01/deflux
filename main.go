@@ -164,7 +164,8 @@ func runWebsocket(err error, cfg *config.Configuration) int {
 
 func eventReader(c config.ApiConfig) (*deconz.WebsocketEventReader, error) {
 	dApi := deconz.API{Config: c}
-	store, err := deconz.NewCachingSensorProvider(dApi)
+	// TODO configurable update interval
+	store, err := deconz.NewCachingSensorProvider(dApi, 1*time.Minute)
 
 	if err != nil {
 		return nil, err

@@ -31,7 +31,16 @@ func (s *SensorEvent) Timeseries() (map[string]string, map[string]interface{}, e
 		return nil, nil, fmt.Errorf("this event (%T:%s) has no time series data", s.State, s.Name)
 	}
 
-	return map[string]string{"name": s.Name, "type": s.Sensor.Type, "id": strconv.Itoa(s.Event.ResourceId()), "source": "websocket"}, f.Fields(), nil
+	fields := f.Fields()
+	fields["battery"] = int(s.Sensor.Config.Battery)
+
+	return map[string]string{
+			"name":   s.Name,
+			"type":   s.Sensor.Type,
+			"id":     strconv.Itoa(s.Event.ResourceId()),
+			"source": "websocket"},
+		fields,
+		nil
 }
 
 // DeconzEvent is a message received over the deCONZ websocket
