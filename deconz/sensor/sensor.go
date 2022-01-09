@@ -3,6 +3,7 @@ package sensor
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 )
 
 // Sensors is a map of sensors indexed by their id
@@ -17,6 +18,16 @@ type Provider interface {
 	Sensor(int) (*Sensor, error)
 }
 
+// fielder is an interface that provides fields for InfluxDB
+type Fielder interface {
+	Fields() map[string]interface{}
+}
+
+// Timeseries provides tags and fields for the time series database
+type TimeSeries interface {
+	Timeseries() (map[string]string, map[string]interface{}, error)
+}
+
 // Sensor is a deCONZ sensor
 // We only implement required fields for event decoding
 type Sensor struct {
@@ -28,6 +39,8 @@ type Sensor struct {
 	StateDef interface{}
 
 	Config Config
+
+	Id int
 }
 
 type Config struct {
@@ -43,6 +56,17 @@ type State struct {
 
 // EmptyState is an empty struct used to indicate no state was parsed
 type EmptyState struct{}
+
+
+// Timeseries returns tags and fields for use in InfluxDB
+func (s *Sensor) Timeseries() (map[string]string, map[string]interface{}, error) {
+	f, ok := s.StateDef.(Fielder)
+	if !ok {
+		return nil, nil, fmt.Errorf("this sensor (%T:%s) has no time series data", s.StateDef, s.Name)
+	}
+
+	return map[string]string{"name": s.Name, "type": s.Type, "id": strconv.Itoa(s.Id), "source": "rest"}, f.Fields(), nil
+}
 
 // DecodeSensorState tries to unmarshal the appropriate state based
 // on the given sensor type

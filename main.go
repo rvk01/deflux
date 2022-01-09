@@ -4,7 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/influxdata/influxdb-client-go/v2/api"
+	"github.com/fixje/deflux/sink"
 	"os"
 	"os/signal"
 	"syscall"
@@ -12,13 +12,13 @@ import (
 
 	"github.com/fixje/deflux/config"
 	"github.com/fixje/deflux/deconz"
-	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	log "github.com/sirupsen/logrus"
 )
 
 func main() {
 	flagLoglevel := flag.String("loglevel", "warning", "debug | error | warning | info")
 	flagConfig := flag.Bool("config-gen", false, "generates a default config and prints it to stdout")
+	flagOnce := flag.Bool("1", false, "write sensor state from REST API once and exit")
 	flag.Parse()
 
 	level, err := log.ParseLevel(*flagLoglevel)
@@ -36,31 +36,77 @@ func main() {
 		return
 	}
 
-	ctx1, cancel := context.WithCancel(context.Background())
-	done := make(chan bool, 1)
-
-	sigsCh := make(chan os.Signal, 1)
-	signal.Notify(sigsCh, syscall.SIGINT, syscall.SIGTERM)
-
 	cfg, err := config.LoadConfiguration()
 	if err != nil {
 		log.Errorf("No config file: %s", err)
 		os.Exit(2)
 	}
 
+	if *flagOnce {
+		os.Exit(runOnce(cfg))
+	}
+
+	os.Exit(runWebsocket(err, cfg))
+}
+
+// runOnce pulls sensor state from API, writes to InfluxDB and returns the program's exit code.
+func runOnce(cfg *config.Configuration) int {
+	// set up output to InfluxDB
+	influx := sink.NewInfluxSink(cfg)
+	defer influx.Close()
+
+	dApi := deconz.API{Config: cfg.Deconz}
+
+	sensors, err := dApi.Sensors()
+	if err != nil {
+		log.Errorf("Failed to fetch sensors: %s", err)
+		return 1
+	}
+	for _, s := range *sensors {
+
+		tags, fields, err := s.Timeseries()
+		if err != nil {
+			log.Warningf("not adding sensor state to influx: %s", err)
+			continue
+		}
+
+		log.Debugf("Writing point for sensor %s, tags = %v, fields = %v", s.Type, tags, fields)
+
+		influx.Write(
+			fmt.Sprintf("deflux_%s", s.Type),
+			tags,
+			fields,
+			time.Now(), // TODO: we should use the time associated with the event...
+		)
+	}
+
+	return 0
+}
+
+// runWebsocket continuously processes events from the deCONZ websocket
+func runWebsocket(err error, cfg *config.Configuration) int {
+	sigsCh := make(chan os.Signal, 1)
+	signal.Notify(sigsCh, syscall.SIGINT, syscall.SIGTERM)
+
 	// set up input from deCONZ websocket
 	eventReader, err := eventReader(cfg.Deconz)
 	if err != nil {
-		panic(err)
+		log.Errorf("Could not create websocket reader: %s", err)
+		return 1
 	}
 
+	ctx1, cancel := context.WithCancel(context.Background())
+	done := make(chan bool, 1)
+
 	// set up output to InfluxDB
-	influxClient, writeAPI := influxDB(cfg)
+	influx := sink.NewInfluxSink(cfg)
 
 	// start websocket consumer background job
 	sensorsCh, err := eventReader.Start(ctx1)
 	if err != nil {
-		panic(err)
+		cancel()
+		log.Errorf("Could not start websocket reader: %s", err)
+		return 2
 	}
 
 	log.Infof("Connected to deCONZ at %s", cfg.Deconz.Addr)
@@ -82,18 +128,15 @@ func main() {
 
 				log.Debugf("Writing point for sensor %s, tags = %v, fields = %v", sensorEvent.Sensor.Type, tags, fields)
 
-				writeAPI.WritePoint(influxdb2.NewPoint(
+				influx.Write(
 					fmt.Sprintf("deflux_%s", sensorEvent.Sensor.Type),
 					tags,
 					fields,
 					time.Now(), // TODO: we should use the time associated with the event...
-				))
+				)
 
 			case <-ctx.Done():
-				// Force all unwritten data to be sent
-				// FIXME panics: writeAPI.Flush()
-				// Ensures background processes finishes
-				influxClient.Close()
+				influx.Close()
 			}
 		}
 
@@ -116,37 +159,17 @@ func main() {
 
 	<-done
 	log.Info("Exiting")
+	return 0
 }
 
 func eventReader(c config.ApiConfig) (*deconz.WebsocketEventReader, error) {
-	api := deconz.API{Config: c}
-	store, err := deconz.NewCachingSensorProvider(api)
+	dApi := deconz.API{Config: c}
+	store, err := deconz.NewCachingSensorProvider(dApi)
 
 	if err != nil {
 		return nil, err
 	}
 
 	// create a new WebsocketEventReader using the websocket connection
-	return deconz.NewWebsocketEventReader(api, store)
-}
-
-func influxDB(cfg *config.Configuration) (influxdb2.Client, api.WriteAPI) {
-	influxClient := influxdb2.NewClientWithOptions(
-		cfg.InfluxDB.Url,
-		cfg.InfluxDB.Token,
-		influxdb2.DefaultOptions().SetBatchSize(20))
-
-	// Get non-blocking write client
-	writeAPI := influxClient.WriteAPI(cfg.InfluxDB.Org, cfg.InfluxDB.Bucket)
-	// Get errors channel
-	errorsCh := writeAPI.Errors()
-
-	// read and log errors in a separate go routine
-	go func() {
-		for err := range errorsCh {
-			fmt.Printf("write error: %s\n", err.Error())
-		}
-	}()
-
-	return influxClient, writeAPI
+	return deconz.NewWebsocketEventReader(dApi, store)
 }

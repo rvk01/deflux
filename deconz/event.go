@@ -10,7 +10,7 @@ import (
 type Event interface {
 	EventName() string
 	Resource() string
-	Id() int
+	ResourceId() int
 	State() interface{}
 }
 
@@ -20,23 +20,18 @@ type SensorEvent struct {
 	Event
 }
 
-// fielder is an interface that provides fields for InfluxDB
-type fielder interface {
-	Fields() map[string]interface{}
-}
-
 // Timeseries returns tags and fields for use in InfluxDB
 func (s *SensorEvent) Timeseries() (map[string]string, map[string]interface{}, error) {
 	if s.Event == nil || s.Event.State() == nil {
 		return nil, nil, fmt.Errorf("event is empty: %v", s)
 	}
 
-	f, ok := s.Event.State().(fielder)
+	f, ok := s.Event.State().(sensor.Fielder)
 	if !ok {
 		return nil, nil, fmt.Errorf("this event (%T:%s) has no time series data", s.State, s.Name)
 	}
 
-	return map[string]string{"name": s.Name, "type": s.Sensor.Type, "id": strconv.Itoa(s.Event.Id())}, f.Fields(), nil
+	return map[string]string{"name": s.Name, "type": s.Sensor.Type, "id": strconv.Itoa(s.Event.ResourceId()), "source": "websocket"}, f.Fields(), nil
 }
 
 // DeconzEvent is a message received over the deCONZ websocket
@@ -67,7 +62,7 @@ func (e DeconzEvent) Resource() string {
 	return e.ResourceName
 }
 
-func (e DeconzEvent) Id() int {
+func (e DeconzEvent) ResourceId() int {
 	return e.ID
 }
 

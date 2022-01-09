@@ -37,8 +37,10 @@ func (a *API) Sensors() (*sensor.Sensors, error) {
 		return nil, fmt.Errorf("unable to decode deCONZ /sensors response: %s", err)
 	}
 
-	for _, s := range sensors {
+	for id, _ := range sensors {
+		s := sensors[id]
 
+		s.Id = id
 		state, err := sensor.DecodeSensorState(s.RawState, s.Type)
 		if err == nil {
 			s.StateDef = state
@@ -48,6 +50,7 @@ func (a *API) Sensors() (*sensor.Sensors, error) {
 			s.StateDef = sensor.EmptyState{}
 		}
 
+		sensors[id] = s
 		log.Debugf("got sensor: %v", s)
 	}
 

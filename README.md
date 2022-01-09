@@ -16,6 +16,7 @@ Note that writing to InfluxDB v1 is still possible. See the section about
 
 - [Supported Sensors](#supported-sensors)
 - [Usage](#usage)
+    - [Pull Once Mode](#pull-once-mode)
 - [InfluxDB](#influxdb)
     - [Version 2](#influxdb-version-2)
     - [Version 1](#influxdb-version-1-compatibility)
@@ -74,7 +75,7 @@ Use `deflux -config-gen` to create such a file. Deflux tries to discover existin
 the config to `stdout`.
 
 ```bash
-deflux -config-gen > deflux.yml
+deflux --config-gen > deflux.yml
 ```
 
 If you have temporarily unlocked the deCONZ gateway (Menu -> Settings -> Gateway -> Advanced -> "Authenticate app"),
@@ -98,13 +99,22 @@ The default log level of the application is `warning`. You can set the
 `-loglevel=` flag to make it a more verbose:
 
 ```
-$ ./deflux -loglevel=debug
+$ ./deflux --loglevel debug
 INFO[2021-12-26T11:29:15+01:00] Using configuration /home/fixje/hacks/deflux/deflux.yml
 INFO[2021-12-26T11:29:15+01:00] Connected to deCONZ at http://172.26.0.2:80/api 
 INFO[2021-12-26T11:29:15+01:00] Deconz websocket connected
 ```
 
 See `deflux -h` for more information on command line flags.
+
+### Pull Once Mode
+
+If you run `deflux -1`, it will fetch the most recent sensor state from the REST API, persist it in InfluxDB and exit.
+It will take the current system time as timestamp for the database.
+
+The mode is intended to persist states for sensors which rarely provide new data points. Note that sensors could also
+lack recent data, because of connectivity issues or an empty battery. The pull-once-mode does not take this
+into account, so be aware! We are planning to find a solution for this problem in the near future.
 
 
 ## InfluxDB
