@@ -1,13 +1,13 @@
 package deconz
 
 import (
-	"encoding/json"
 	"github.com/fixje/deflux/config"
 	"github.com/fixje/deflux/deconz/sensor"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
 	"testing"
+	"time"
 )
 
 func TestApiSensors(t *testing.T) {
@@ -68,7 +68,7 @@ func TestApiSensors(t *testing.T) {
 	defer ts.Close()
 
 	api := API{
-		Config:      config.ApiConfig{
+		Config: config.ApiConfig{
 			Addr:   ts.URL,
 			APIKey: "",
 			WsAddr: "",
@@ -81,32 +81,33 @@ func TestApiSensors(t *testing.T) {
 		t.Fatalf("failed to get sensors: %s", err)
 	}
 
+	lastSeen4, _ := time.Parse("2006-01-02T15:04Z", "2022-01-09T17:58Z")
+	lastSeen5, _ := time.Parse("2006-01-02T15:04Z", "2022-01-09T18:18Z")
+
 	want := &sensor.Sensors{
 		4: sensor.Sensor{
 			Type:     "ZHAPressure",
 			Name:     "th-sz",
-			LastSeen: "2022-01-09T17:58Z",
-			RawState: json.RawMessage{},
+			LastSeen: lastSeen4,
 			StateDef: &sensor.ZHAPressure{
 				State:    sensor.State{Lastupdated: "2022-01-09T17:58:29.629"},
 				Pressure: 996,
 			},
-			Config:   sensor.Config{Battery: 91},
-			Id:       4,
+			Config: sensor.Config{Battery: 91},
+			Id:     4,
 		},
 		5: sensor.Sensor{
 			Type:     "ZHAOpenClose",
 			Name:     "wi-wc",
-			LastSeen: "2022-01-09T18:18Z",
-			RawState: json.RawMessage{},
+			LastSeen: lastSeen5,
 			StateDef: &sensor.ZHAOpenClose{
-				State:    sensor.State{Lastupdated: "2022-01-09T18:12:29.179"},
-				Tampered: false,
+				State:      sensor.State{Lastupdated: "2022-01-09T18:12:29.179"},
+				Tampered:   false,
 				Lowbattery: false,
-				Open: false,
+				Open:       false,
 			},
-			Config:   sensor.Config{Battery: 0},
-			Id:       5,
+			Config: sensor.Config{Battery: 0},
+			Id:     5,
 		},
 	}
 

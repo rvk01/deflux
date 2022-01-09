@@ -3,7 +3,9 @@ package sensor
 import (
 	"encoding/json"
 	"fmt"
+	log "github.com/sirupsen/logrus"
 	"strconv"
+	"time"
 )
 
 // Sensors is a map of sensors indexed by their id
@@ -31,16 +33,12 @@ type TimeSeries interface {
 // Sensor is a deCONZ sensor
 // We only implement required fields for event decoding
 type Sensor struct {
-	Type     string `json:"type"`
-	Name     string `json:"name"`
-	LastSeen string `json:"lastseen"`
-
-	RawState json.RawMessage `json:"state"`
+	Type     string    `json:"type"`
+	Name     string    `json:"name"`
+	LastSeen time.Time `json:"lastseen"`
 	StateDef interface{}
-
-	Config Config
-
-	Id int
+	Config   Config
+	Id       int
 }
 
 type Config struct {
@@ -56,6 +54,43 @@ type State struct {
 
 // EmptyState is an empty struct used to indicate no state was parsed
 type EmptyState struct{}
+
+// UnmarshalJSON converts a JSON representation of a Sensor into the Sensor struct
+// The auxillary approach is inspired by https://github.com/golang/go/issues/21990
+func (s *Sensor) UnmarshalJSON(b []byte) error {
+	var aux struct {
+		Type     string          `json:"type"`
+		Name     string          `json:"name"`
+		LastSeen string          `json:"lastseen"`
+		State    json.RawMessage `json:"state"`
+		Config   Config
+	}
+
+	err := json.Unmarshal(b, &aux)
+	if err != nil {
+		return err
+	}
+
+	t, err := time.Parse("2006-01-02T15:04Z", aux.LastSeen)
+	if err != nil {
+		return err
+	}
+
+	s.Type = aux.Type
+	s.Name = aux.Name
+	s.LastSeen = t
+	s.Config = aux.Config
+
+	state, err := DecodeSensorState(aux.State, aux.Type)
+	if err == nil {
+		s.StateDef = state
+	} else {
+		log.Warnf("unable to decode state: %s", err)
+		s.StateDef = EmptyState{}
+	}
+
+	return nil
+}
 
 // Timeseries returns tags and fields for use in InfluxDB
 func (s *Sensor) Timeseries() (map[string]string, map[string]interface{}, error) {

@@ -41,14 +41,6 @@ func (a *API) Sensors() (*sensor.Sensors, error) {
 		s := sensors[id]
 
 		s.Id = id
-		state, err := sensor.DecodeSensorState(s.RawState, s.Type)
-		if err == nil {
-			s.StateDef = state
-			s.RawState = json.RawMessage{}
-		} else {
-			log.Warnf("unable to decode state: %s", err)
-			s.StateDef = sensor.EmptyState{}
-		}
 
 		sensors[id] = s
 		log.Debugf("got sensor: %v, state: %v", s, s.StateDef)
