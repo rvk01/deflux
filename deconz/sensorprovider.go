@@ -11,9 +11,9 @@ import (
 // CachingSensorProvider is a sensor.Provider that retrieves sensor info from the dCONZ REST API and caches results
 // It is the default sensor.Provider
 type CachingSensorProvider struct {
-	api   API
-	cache *sensor.Sensors
-	nextFetch time.Time
+	api            API
+	cache          *sensor.Sensors
+	nextFetch      time.Time
 	updateInterval time.Duration
 }
 

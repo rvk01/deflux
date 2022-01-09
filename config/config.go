@@ -8,11 +8,13 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"time"
 )
 
 // YmlFileName is the filename
 const YmlFileName = "deflux.yml"
 
+// InfluxDB stores the InfluxDB configuration
 type InfluxDB struct {
 	Url    string
 	Token  string
@@ -20,10 +22,26 @@ type InfluxDB struct {
 	Bucket string
 }
 
-// Configuration holds data for Deconz and influxdb configuration
+// Configuration holds data for Deconz and InfluxDB configuration
 type Configuration struct {
-	Deconz   ApiConfig
-	InfluxDB InfluxDB
+	Deconz     ApiConfig
+	InfluxDB   InfluxDB
+	FillValues FillConfig
+}
+
+// FillConfig holds configuration for polling sensor measurements from the REST API
+type FillConfig struct {
+	// Enabled is set true if sensor values shall be added from the REST API, if no updates have been received
+	// for some time over the websocket.
+	Enabled bool
+
+	// FillInterval defines the duration after which the last sensor value from the REST API is inserted into the
+	// database, if no more events have been seen from the websocket
+	FillInterval time.Duration
+
+	// LastSeenTimeout defines the duration after which a sensor is considered offline
+	// It compares the wallclock time to the "lastseen" field of the /sensors REST endpoint
+	LastSeenTimeout time.Duration
 }
 
 func LoadConfiguration() (*Configuration, error) {
@@ -108,6 +126,11 @@ func defaultConfiguration() *Configuration {
 			Token:  "SECRET",
 			Org:    "organization",
 			Bucket: "default",
+		},
+		FillValues: FillConfig{
+			Enabled:         false,
+			FillInterval:    30 * time.Minute,
+			LastSeenTimeout: 2 * time.Hour,
 		},
 	}
 

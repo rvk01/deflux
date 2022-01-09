@@ -90,10 +90,19 @@ influxdb:
   token: SECRET
   org: organization
   bucket: default
+fillvalues:
+  enabled: false
+  fillinterval: 30m0s
+  lastseentimeout: 2h0m0s
 ```
 
 Edit the file according to your needs. If you want to write to InfluxDB version 1, see the section about
 [InfluxDB v1 configuration](#influx1compat).
+
+When the `fillvalues` functionality is enabled, deflux will write the last reported value of the REST API, if a sensor
+has not reported any new measurement after `fillinterval`. We assume that the sensor is working as long as deCON
+reports a `lastseen` time stamp not older than the configured `lastseentimeout`. The config values of `fillinterval` and
+`lastseentimeout` should be set to anything parse-able by Go's [`time.ParseDuration` function](https://pkg.go.dev/time#ParseDuration).
 
 The default log level of the application is `warning`. You can set the
 `-loglevel=` flag to make it a more verbose:
@@ -119,8 +128,13 @@ into account, so be aware! We are planning to find a solution for this problem i
 
 ## InfluxDB
 
-Sensor measurements are added as InfluxDB field values and tagged with sensor type, id and name. In addition to that,
-a tag `source` indicates if the value has been obtained live via the websocket or the REST API (_pull-once-mode_).
+Sensor measurements are added as InfluxDB field values. Every measurement has the following tags:
+  - _type_: the sensor type, e.g. ZHAPressure
+  - _id_: a unique numeric sensor identifier of the deCONZ API, starting at 1
+  - _name_: the sensor name as defined by the user in the Phoscon App
+  - _source_: indicates if the value has been obtained via the websocket or the REST API. Values of the REST API
+              are added either in the `pull-once-mode` mode or when `fillvalues` is enabled.
+
 Different event types are stored in different measurements, meaning you will end up with one InfluxDB measurement per
 sensor type.
 
@@ -278,3 +292,4 @@ GOOS=linux GOARCH=arm GOARM=7 go build
 
 - [deCONZ sensor state attributes](https://dresden-elektronik.github.io/deconz-rest-doc/endpoints/sensors/#supported-state-attributes_1)
 - [deCONZ websocket API docs](https://dresden-elektronik.github.io/deconz-rest-doc/endpoints/websocket/#message-fields)
+- [deCONZ lastseen and reachable flag discussion](https://github.com/dresden-elektronik/deconz-rest-plugin/issues/2590)

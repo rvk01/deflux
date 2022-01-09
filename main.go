@@ -33,7 +33,7 @@ func main() {
 
 	if *flagConfig {
 		config.OutputDefaultConfiguration()
-		return
+		os.Exit(0)
 	}
 
 	cfg, err := config.LoadConfiguration()
@@ -76,7 +76,7 @@ func runOnce(cfg *config.Configuration) int {
 			fmt.Sprintf("deflux_%s", s.Type),
 			tags,
 			fields,
-			time.Now(), // TODO: we should use the time associated with the event...
+			time.Now(),
 		)
 	}
 
@@ -89,7 +89,17 @@ func runWebsocket(err error, cfg *config.Configuration) int {
 	signal.Notify(sigsCh, syscall.SIGINT, syscall.SIGTERM)
 
 	// set up input from deCONZ websocket
-	eventReader, err := eventReader(cfg.Deconz)
+	dApi := deconz.API{Config: cfg.Deconz}
+	// TODO configurable update interval
+	sensorProvider, err := deconz.NewCachingSensorProvider(dApi, 1*time.Minute)
+
+	if err != nil {
+		log.Errorf("Could not create websocket reader: %s", err)
+		return 1
+	}
+
+	// create a new WebsocketEventReader using the websocket connection
+	eventReader, err := deconz.NewWebsocketEventReader(dApi, sensorProvider)
 	if err != nil {
 		log.Errorf("Could not create websocket reader: %s", err)
 		return 1
@@ -111,6 +121,12 @@ func runWebsocket(err error, cfg *config.Configuration) int {
 
 	log.Infof("Connected to deCONZ at %s", cfg.Deconz.Addr)
 
+	lastWrite := make(map[int]time.Time)
+	ticker := time.NewTicker(1 * time.Minute)
+	if cfg.FillValues.Enabled {
+		log.Infof("Filling sensor values enabled. Fill interval is %v, timeout is %v", cfg.FillValues.FillInterval, cfg.FillValues.LastSeenTimeout)
+	}
+
 	// bring it all together
 	go func(ctx context.Context) {
 		for {
@@ -128,14 +144,62 @@ func runWebsocket(err error, cfg *config.Configuration) int {
 
 				log.Debugf("Writing point for sensor %s, tags = %v, fields = %v", sensorEvent.Sensor.Type, tags, fields)
 
+				now := time.Now()
+
 				influx.Write(
 					fmt.Sprintf("deflux_%s", sensorEvent.Sensor.Type),
 					tags,
 					fields,
-					time.Now(), // TODO: we should use the time associated with the event...
+					now,
 				)
 
+				lastWrite[sensorEvent.ResourceId()] = now
+
+			case <-ticker.C:
+				if !cfg.FillValues.Enabled {
+					continue
+				}
+
+				log.Debugf("Checking sensor values older than %s", cfg.FillValues.FillInterval)
+
+				for id, t := range lastWrite {
+					now := time.Now()
+
+					if t.Add(cfg.FillValues.FillInterval).After(now) {
+						continue
+					}
+
+					s, err := sensorProvider.Sensor(id)
+					if err != nil {
+						log.Warningf("Could not retrieve sensor with id %d: %s", id, err)
+						continue
+					}
+
+					if s.LastSeen.Add(cfg.FillValues.LastSeenTimeout).Before(now) {
+						log.Warningf("sensor %d last seen %s ago -> assuming it's offline", s.Id, now.Sub(s.LastSeen))
+						continue
+					}
+
+					tags, fields, err := s.Timeseries()
+					if err != nil {
+						log.Warningf("not adding sensor fill state to influx: %s", err)
+						continue
+					}
+
+					log.Debugf("Filling point for sensor %s, tags = %v, fields = %v", s.Type, tags, fields)
+
+					influx.Write(
+						fmt.Sprintf("deflux_%s", s.Type),
+						tags,
+						fields,
+						time.Now(),
+					)
+
+					lastWrite[id] = now
+				}
+
 			case <-ctx.Done():
+				ticker.Stop()
 				influx.Close()
 			}
 		}
@@ -160,17 +224,4 @@ func runWebsocket(err error, cfg *config.Configuration) int {
 	<-done
 	log.Info("Exiting")
 	return 0
-}
-
-func eventReader(c config.ApiConfig) (*deconz.WebsocketEventReader, error) {
-	dApi := deconz.API{Config: c}
-	// TODO configurable update interval
-	store, err := deconz.NewCachingSensorProvider(dApi, 1*time.Minute)
-
-	if err != nil {
-		return nil, err
-	}
-
-	// create a new WebsocketEventReader using the websocket connection
-	return deconz.NewWebsocketEventReader(dApi, store)
 }

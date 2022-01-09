@@ -71,14 +71,17 @@ func (s *Sensor) UnmarshalJSON(b []byte) error {
 		return err
 	}
 
-	t, err := time.Parse("2006-01-02T15:04Z", aux.LastSeen)
-	if err != nil {
-		return err
+	if aux.LastSeen != "" {
+		t, err := time.Parse("2006-01-02T15:04Z", aux.LastSeen)
+		if err != nil {
+			return err
+		}
+
+		s.LastSeen = t
 	}
 
 	s.Type = aux.Type
 	s.Name = aux.Name
-	s.LastSeen = t
 	s.Config = aux.Config
 
 	state, err := DecodeSensorState(aux.State, aux.Type)
