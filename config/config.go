@@ -35,6 +35,9 @@ type FillConfig struct {
 	// for some time over the websocket.
 	Enabled bool
 
+	// InitialFill set true will write the most recent measurement for each sensor from the REST API on startup
+	InitialFill bool
+
 	// FillInterval defines the duration after which the last sensor value from the REST API is inserted into the
 	// database, if no more events have been seen from the websocket
 	FillInterval time.Duration
@@ -129,6 +132,7 @@ func defaultConfiguration() *Configuration {
 		},
 		FillValues: FillConfig{
 			Enabled:         false,
+			InitialFill:     true,
 			FillInterval:    30 * time.Minute,
 			LastSeenTimeout: 2 * time.Hour,
 		},

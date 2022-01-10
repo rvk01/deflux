@@ -92,6 +92,7 @@ influxdb:
   bucket: default
 fillvalues:
   enabled: false
+  initialfill: true
   fillinterval: 30m0s
   lastseentimeout: 2h0m0s
 ```
@@ -103,6 +104,8 @@ When the `fillvalues` functionality is enabled, deflux will write the last repor
 has not reported any new measurement after `fillinterval`. We assume that the sensor is working as long as deCON
 reports a `lastseen` time stamp not older than the configured `lastseentimeout`. The config values of `fillinterval` and
 `lastseentimeout` should be set to anything parse-able by Go's [`time.ParseDuration` function](https://pkg.go.dev/time#ParseDuration).
+With `initialfill` set to true, the application writes measurements from the REST API to the database when it starts.
+
 
 The default log level of the application is `warning`. You can set the
 `-loglevel=` flag to make it a more verbose:

@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/fixje/deflux/deconz/sensor"
 	"github.com/fixje/deflux/sink"
 	"os"
 	"os/signal"
@@ -63,24 +64,32 @@ func runOnce(cfg *config.Configuration) int {
 		return 1
 	}
 	for _, s := range *sensors {
-
-		tags, fields, err := s.Timeseries()
-		if err != nil {
-			log.Warningf("not adding sensor state to influx: %s", err)
-			continue
-		}
-
-		log.Debugf("Writing point for sensor %s, tags = %v, fields = %v", s.Type, tags, fields)
-
-		influx.Write(
-			fmt.Sprintf("deflux_%s", s.Type),
-			tags,
-			fields,
-			time.Now(),
-		)
+		writeSensorState(s, influx, time.Now(), nil)
 	}
 
 	return 0
+}
+
+// writeSensorState writes a sensor measurement to InfluxDB
+func writeSensorState(s sensor.Sensor, influx *sink.InfluxSink, t time.Time, last map[int]*time.Time) {
+	tags, fields, err := s.Timeseries()
+	if err != nil {
+		log.Warningf("not adding sensor state to influx: %s", err)
+		return
+	}
+
+	log.Debugf("Writing point for sensor %s, tags = %v, fields = %v", s.Type, tags, fields)
+
+	influx.Write(
+		fmt.Sprintf("deflux_%s", s.Type),
+		tags,
+		fields,
+		t,
+	)
+
+	if last != nil {
+		last[s.Id] = &t
+	}
 }
 
 // runWebsocket continuously processes events from the deCONZ websocket
@@ -121,10 +130,31 @@ func runWebsocket(err error, cfg *config.Configuration) int {
 
 	log.Infof("Connected to deCONZ at %s", cfg.Deconz.Addr)
 
-	lastWrite := make(map[int]time.Time)
+	lastWrite := make(map[int]*time.Time)
 	ticker := time.NewTicker(1 * time.Minute)
 	if cfg.FillValues.Enabled {
 		log.Infof("Filling sensor values enabled. Fill interval is %v, timeout is %v", cfg.FillValues.FillInterval, cfg.FillValues.LastSeenTimeout)
+
+		// TODO if InitialFill is false, compare "lastupdated" timestamp to current time and write
+		if cfg.FillValues.InitialFill {
+			sensors, err := sensorProvider.Sensors()
+			if err != nil {
+				log.Errorf("Failed to fetch sensors for initial fill: %s", err)
+			}
+			for _, s := range *sensors {
+				now := time.Now()
+
+				if s.LastSeen.IsZero() {
+					continue
+				}
+				if s.LastSeen.Add(cfg.FillValues.LastSeenTimeout).Before(now) {
+					log.Warningf("sensor %d last seen %s ago -> assuming it's offline", s.Id, now.Sub(s.LastSeen))
+					continue
+				}
+
+				writeSensorState(s, influx, now, lastWrite)
+			}
+		}
 	}
 
 	// bring it all together
@@ -153,7 +183,7 @@ func runWebsocket(err error, cfg *config.Configuration) int {
 					now,
 				)
 
-				lastWrite[sensorEvent.ResourceId()] = now
+				lastWrite[sensorEvent.ResourceId()] = &now
 
 			case <-ticker.C:
 				if !cfg.FillValues.Enabled {
@@ -180,22 +210,7 @@ func runWebsocket(err error, cfg *config.Configuration) int {
 						continue
 					}
 
-					tags, fields, err := s.Timeseries()
-					if err != nil {
-						log.Warningf("not adding sensor fill state to influx: %s", err)
-						continue
-					}
-
-					log.Debugf("Filling point for sensor %s, tags = %v, fields = %v", s.Type, tags, fields)
-
-					influx.Write(
-						fmt.Sprintf("deflux_%s", s.Type),
-						tags,
-						fields,
-						time.Now(),
-					)
-
-					lastWrite[id] = now
+					writeSensorState(*s, influx, now, lastWrite)
 				}
 
 			case <-ctx.Done():
