@@ -201,14 +201,14 @@ Table: keys: []
 
 #### Example Queries
 
-Get temperature grouped by sensor name:
+The following query retrieves temperature grouped by sensor name. This might be useful for a Grafana dashboard.
 
 ```
 $ influx query --org YOUR_ORG << EOF
 from(bucket: "YOUR_BUCKET")
   |> range(start: -3h)
   |> filter(fn: (r) =>
-    r._measurement == "deflux_ZHATemperature"
+    r._measurement == "deflux_ZHATemperature" and r._field == "temperature"
     )
   |> keep(columns: ["_time", "name", "_value"])
 |> group(columns: ["name"])
@@ -223,6 +223,35 @@ Table: keys: [name]
          th-sz  2021-12-27T07:01:23.235873787Z                 18.46
          th-sz  2021-12-27T07:04:04.025135987Z                 17.94
 ...
+```
+
+Here is an example for querying all fields of a measurement type.
+The `map()` is required to convert all values to the same data type (battery is of type `int`, temperature of type
+`float`).
+
+```
+$ influx query --org YOUR_ORG << EOF
+from(bucket: "YOUR_BUCKET")
+  |> range(start: -3h)
+  |> filter(fn: (r) =>
+    r._measurement == "deflux_ZHATemperature"
+    )
+  |> map(fn: (r) => ({r with _value: float(v: r._value)}))
+|> group(columns: ["name"])
+EOF
+Result: _result
+Table: keys: [name]
+           name:string           _field:string                     _start:time                      _stop:time                      _time:time                  _value:float               id:string     _measurement:string           source:string             type:string
+----------------------  ----------------------  ------------------------------  ------------------------------  ------------------------------  ----------------------------  ----------------------  ----------------------  ----------------------  ----------------------
+                 th-sz                 battery  2022-01-11T05:32:03.517002170Z  2022-01-11T08:32:03.517002170Z  2022-01-11T08:03:36.015411017Z                            95                       2   deflux_ZHATemperature                    rest          ZHATemperature
+                 th-sz                 battery  2022-01-11T05:32:03.517002170Z  2022-01-11T08:32:03.517002170Z  2022-01-11T08:21:36.014114003Z                            95                       2   deflux_ZHATemperature                    rest          ZHATemperature
+                 th-sz                 battery  2022-01-11T05:32:03.517002170Z  2022-01-11T08:32:03.517002170Z  2022-01-11T05:52:29.048907354Z                            95                       2   deflux_ZHATemperature               websocket          ZHATemperature
+                 th-sz                 battery  2022-01-11T05:32:03.517002170Z  2022-01-11T08:32:03.517002170Z  2022-01-11T05:59:30.841944695Z                            95                       2   deflux_ZHATemperature               websocket          ZHATemperature
+....
+                 th-sz             temperature  2022-01-11T05:32:03.517002170Z  2022-01-11T08:32:03.517002170Z  2022-01-11T08:03:36.015411017Z                         19.53                       2   deflux_ZHATemperature                    rest          ZHATemperature
+                 th-sz             temperature  2022-01-11T05:32:03.517002170Z  2022-01-11T08:32:03.517002170Z  2022-01-11T08:21:36.014114003Z                         19.78                       2   deflux_ZHATemperature                    rest          ZHATemperature
+                 th-sz             temperature  2022-01-11T05:32:03.517002170Z  2022-01-11T08:32:03.517002170Z  2022-01-11T05:52:29.048907354Z                         18.12                       2   deflux_ZHATemperature               websocket          ZHATemperature
+                 th-sz             temperature  2022-01-11T05:32:03.517002170Z  2022-01-11T08:32:03.517002170Z  2022-01-11T05:59:30.841944695Z                         18.12                       2   deflux_ZHATemperature               websocket          ZHATemperature
 ```
 
 
