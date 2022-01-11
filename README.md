@@ -1,8 +1,10 @@
 # deflux
 
-deflux connects to deCONZ rest api, listens for sensor updates and write these to InfluxDB.
+deflux connects to the deCONZ REST API and web socket, listens for sensor updates and writes them to InfluxDB.
 
-deCONZ supports a variaty of Zigbee sensors but have no historical data about their values - with deflux you'll be able to store all these measurements in influxdb where they can be queried from the command line or graphical tools such as grafana. 
+deCONZ supports a variety of ZigBee sensors, but doesn't keep a history of measurements.
+Deflux archives all these values in InfluxDB, where they can be queried from the command line or graphical tools
+such as Grafana. 
 
 This software was forked from the original [deflux](https://github.com/fasmide/deflux) and added support for InfluxDB
 version 2.
@@ -11,6 +13,13 @@ introduction of a new query language called
 [Flux](https://docs.influxdata.com/influxdb/cloud/query-data/get-started/).
 Note that writing to InfluxDB v1 is still possible. See the section about 
 [InfluxDB v1 compatibility](#influxdb-version-1-compatibility).
+A couple of more features were added in the meantime:
+  - added battery state to sensors' measurements where available
+  - a pull-once-mode to write only the most recent measurement
+  - ...
+
+_This project is maintained. Feel free to report issues or open pull requests._
+
 
 ## Table of Contents
 
