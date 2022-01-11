@@ -62,7 +62,7 @@ func TestApiSensors(t *testing.T) {
 		}`
 
 		if _, err := w.Write([]byte(resp)); err != nil {
-			t.Fatalf("failed to sens response: %s", err)
+			t.Fatalf("failed to send response: %s", err)
 		}
 	}))
 	defer ts.Close()
@@ -113,5 +113,97 @@ func TestApiSensors(t *testing.T) {
 
 	if !reflect.DeepEqual(want, sensors) {
 		t.Fatalf("expected: %v, got: %v", &want, sensors)
+	}
+}
+
+// Regression test for wrong ZHABattery time series
+func TestBatteryTimeSeries(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		resp := `{
+			"1": {
+				"config": {
+					"on": true,
+					"reachable": true
+				},
+				"ep": 1,
+				"etag": "500b6bd683da649af22b6bddde61824f",
+				"lastannounced": "2021-12-24T11:37:43Z",
+				"lastseen": "2022-01-11T11:48Z",
+				"manufacturername": "IKEA of Sweden",
+				"modelid": "FYRTUR block-out roller blind",
+				"name": "batterytest",
+				"state": {
+					"battery": 75,
+					"lastupdated": "2021-12-20T06:03:35.854"
+				},
+				"swversion": "2.2.009",
+				"type": "ZHABattery",
+				"uniqueid": "84:71:27:ff:fe:25:f7:b3-01-0001"
+			}
+		}`
+
+		if _, err := w.Write([]byte(resp)); err != nil {
+			t.Fatalf("failed to send response: %s", err)
+		}
+	}))
+	defer ts.Close()
+
+	api := API{
+		Config: config.ApiConfig{
+			Addr:   ts.URL,
+			APIKey: "",
+			WsAddr: "",
+		},
+		sensorCache: nil,
+	}
+
+	sensors, err := api.Sensors()
+	if err != nil {
+		t.Fatalf("failed to get sensors: %s", err)
+	}
+
+	lastSeen, _ := time.Parse("2006-01-02T15:04Z", "2022-01-11T11:48Z")
+
+	want := &sensor.Sensors{
+		1: sensor.Sensor{
+			Type:     "ZHABattery",
+			Name:     "batterytest",
+			LastSeen: lastSeen,
+			StateDef: &sensor.ZHABattery{
+				State:   sensor.State{Lastupdated: "2021-12-20T06:03:35.854"},
+				Battery: 75,
+			},
+			Id: 1,
+		},
+	}
+
+	if !reflect.DeepEqual(want, sensors) {
+		t.Fatalf("expected: %v, got: %v", &want, sensors)
+	}
+
+	for _, s := range *sensors {
+		tags, fields, err := s.Timeseries()
+
+		if err != nil {
+			t.Fatalf("timeseries has error: %s", err)
+		}
+
+		wantTags := map[string]string{
+			"name":   "batterytest",
+			"type":   "ZHABattery",
+			"id":     "1",
+			"source": "rest",
+		}
+
+		if !reflect.DeepEqual(wantTags, tags) {
+			t.Fatalf("expected: %v, got: %v", wantTags, tags)
+		}
+
+		wantFields := map[string]interface{}{"battery": int16(75)}
+
+		if !reflect.DeepEqual(wantFields, fields) {
+			t.Fatalf("expected: %v, got: %v", wantFields, fields)
+		}
+
 	}
 }

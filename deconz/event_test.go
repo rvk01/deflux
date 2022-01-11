@@ -6,6 +6,7 @@ import (
 	"os"
 	"reflect"
 	"testing"
+	"time"
 )
 
 type TestSensorProvider struct {
@@ -332,4 +333,55 @@ func decodeTest(t *testing.T, name string, input string) interface{} {
 	}
 
 	return result.State()
+}
+
+// Regression test for wrong ZHABattery time series
+func TestBatteryTimeseries(t *testing.T) {
+	se := SensorEvent{
+		Sensor: &sensor.Sensor{
+			Type:     "ZHABattery",
+			Name:     "batterytest",
+			LastSeen: time.Time{},
+			Config:   sensor.Config{Battery: 0},
+			StateDef: &sensor.ZHABattery{
+				State:   sensor.State{Lastupdated: "2021-12-20T06:03:35.854"},
+				Battery: 75,
+			},
+			Id: 1,
+		},
+		Event: DeconzEvent{
+			Type:         "sensor",
+			Event:        "changed",
+			ResourceName: "batterytest",
+			ID:           1,
+			RawState:     nil,
+			StateDef: &sensor.ZHABattery{
+				State:   sensor.State{Lastupdated: "2021-12-20T06:03:35.854"},
+				Battery: 75,
+			},
+		},
+	}
+
+	tags, fields, err := se.Timeseries()
+
+	if err != nil {
+		t.Fatalf("timeseries has error: %s", err)
+	}
+
+	wantTags := map[string]string{
+		"name":   "batterytest",
+		"type":   "ZHABattery",
+		"id":     "1",
+		"source": "websocket",
+	}
+
+	if !reflect.DeepEqual(wantTags, tags) {
+		t.Fatalf("expected: %v, got: %v", wantTags, tags)
+	}
+
+	wantFields := map[string]interface{}{"battery": int16(75)}
+
+	if !reflect.DeepEqual(wantFields, fields) {
+		t.Fatalf("expected: %v, got: %v", wantFields, fields)
+	}
 }

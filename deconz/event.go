@@ -32,7 +32,10 @@ func (s *SensorEvent) Timeseries() (map[string]string, map[string]interface{}, e
 	}
 
 	fields := f.Fields()
-	fields["battery"] = int(s.Sensor.Config.Battery)
+
+	if _, ok := fields["battery"]; !ok {
+		fields["battery"] = int(s.Sensor.Config.Battery)
+	}
 
 	return map[string]string{
 			"name":   s.Name,
