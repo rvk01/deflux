@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-// YmlFileName is the filename
+// YmlFileName is the name of the default config file
 const YmlFileName = "deflux.yml"
 
 // InfluxDB stores the InfluxDB configuration
@@ -47,8 +47,11 @@ type FillConfig struct {
 	LastSeenTimeout time.Duration
 }
 
-func LoadConfiguration() (*Configuration, error) {
-	data, err := readConfiguration()
+// LoadConfiguration loads the deflux configuration from a file.
+// The file parameter provides a location. If it is empty, deflux tries the default config file locations
+// ./deflux.yml and /etc/deflux.yml
+func LoadConfiguration(file string) (*Configuration, error) {
+	data, err := readConfiguration(file)
 	if err != nil {
 		return nil, fmt.Errorf("could not read configuration: %s", err)
 	}
@@ -61,8 +64,13 @@ func LoadConfiguration() (*Configuration, error) {
 	return &config, nil
 }
 
-// readConfiguration tries to read pwd/deflux.yml or /etc/deflux.yml
-func readConfiguration() ([]byte, error) {
+// readConfiguration reads the config file.
+// If file is an empty string, it tries to read $(pwd)/deflux.yml and /etc/deflux.yml
+func readConfiguration(file string) ([]byte, error) {
+	if file != "" {
+		return ioutil.ReadFile(file)
+	}
+
 	// first try to load ${pwd}/deflux.yml
 	pwd, err := os.Getwd()
 	if err != nil {
@@ -76,8 +84,7 @@ func readConfiguration() ([]byte, error) {
 		return data, nil
 	}
 
-	// if we reached this code, we where unable to read a "local" Configuration
-	// try from /etc/deflux.yml
+	// ${pwd}/deflux.yml does not exist, try from /etc/deflux.yml
 	etcPath := path.Join("/etc", YmlFileName)
 	data, etcErr := ioutil.ReadFile(etcPath)
 	if etcErr != nil {
@@ -88,11 +95,12 @@ func readConfiguration() ([]byte, error) {
 	return data, nil
 }
 
+// OutputDefaultConfiguration tries to pair with deCONZ and prints the default config to stdout
 func OutputDefaultConfiguration() {
 
 	c := defaultConfiguration()
 
-	// try to pair with deconz
+	// try to pair with deCONZ
 	u, err := url.Parse(c.Deconz.Addr)
 	if err == nil {
 		apikey, err := Pair(*u)
@@ -139,7 +147,7 @@ func defaultConfiguration() *Configuration {
 	}
 
 	// let's see if we are able to discover a gateway, and overwrite parts of the
-	// default congfiguration
+	// default configuration
 	discovered, err := Discover()
 	if err != nil {
 		if _, err1 := fmt.Fprintf(os.Stderr, "## deCONZ Gateway discovery failed: %s. Complete config manually.\n", err); err1 != nil {

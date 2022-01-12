@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-// DeconzDiscoveryEndpoint is the url used when auto discovering a deCONZ gateway
+// DeconzDiscoveryEndpoint is the URL used when auto discovering a deCONZ gateway
 const DeconzDiscoveryEndpoint = "https://dresden-light.appspot.com/discover"
 
 // DiscoveryResponse is a slice of discovered gateways

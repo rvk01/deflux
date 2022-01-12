@@ -18,7 +18,8 @@ import (
 
 func main() {
 	flagLoglevel := flag.String("loglevel", "warning", "debug | error | warning | info")
-	flagConfig := flag.Bool("config-gen", false, "generates a default config and prints it to stdout")
+	flagConfigGen := flag.Bool("config-gen", false, "generate a default config and print it on stdout")
+	flagConfig := flag.String("config", "", "specify the location of the config file (default: ./deflux.yml or /etc/deflux.yml)")
 	flagOnce := flag.Bool("1", false, "write sensor state from REST API once and exit")
 	flag.Parse()
 
@@ -32,12 +33,12 @@ func main() {
 		FullTimestamp: true,
 	})
 
-	if *flagConfig {
+	if *flagConfigGen {
 		config.OutputDefaultConfiguration()
 		os.Exit(0)
 	}
 
-	cfg, err := config.LoadConfiguration()
+	cfg, err := config.LoadConfiguration(*flagConfig)
 	if err != nil {
 		log.Errorf("No config file: %s", err)
 		os.Exit(2)

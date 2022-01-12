@@ -43,7 +43,7 @@ func (c *ApiConfig) DiscoverWebsocket() error {
 		return fmt.Errorf("unable to discover websocket while decoding response: %s", err)
 	}
 
-	// change our old parsed url to websocket, it should connect to the websocket endpoint of deCONZ
+	// change our old parsed URL to websocket, it should connect to the websocket endpoint of deCONZ
 	u.Scheme = "ws"
 	u.Path = "/"
 	u.Host = fmt.Sprintf("%s:%d", u.Hostname(), conf.Websocketport)

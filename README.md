@@ -6,19 +6,17 @@ deCONZ supports a variety of ZigBee sensors, but doesn't keep a history of measu
 Deflux archives all these values in InfluxDB, where they can be queried from the command line or graphical tools
 such as Grafana. 
 
-This software was forked from the original [deflux](https://github.com/fasmide/deflux) and added support for InfluxDB
-version 2.
-Influx did major changes moving from version 1 to version 2, most notably the
-introduction of a new query language called
-[Flux](https://docs.influxdata.com/influxdb/cloud/query-data/get-started/).
-Note that writing to InfluxDB v1 is still possible. See the section about 
-[InfluxDB v1 compatibility](#influxdb-version-1-compatibility).
-A couple of more features were added in the meantime:
-  - added battery state to sensors' measurements where available
-  - a pull-once-mode to write only the most recent measurement
-  - ...
+This project is a fork of the original [deflux](https://github.com/fasmide/deflux). Thanks to the original authors, who
+did all the heavy lifting.
+We have added several features here, to name a few:
+  - Support for InfluxDB version 2. Influx did major changes moving from version 1 to version 2, most notably the
+    introduction of a new query language called [Flux](https://docs.influxdata.com/influxdb/cloud/query-data/get-started/).
+    Note that writing to InfluxDB v1 is still possible. See the section about [InfluxDB v1 compatibility](#influxdb-version-1-compatibility).
+  - Additional battery state in sensor measurements (where available)
+  - A pull-once-mode to write only the most recent measurement
+  - Implementation of more sensor types
 
-_This project is maintained. Feel free to report issues or open pull requests._
+The project is maintained. Feel free to report issues or open pull requests.
 
 
 ## Table of Contents
@@ -77,11 +75,8 @@ Use `go install` to install the application.
 go install github.com/fixje/deflux
 ```
 
-deflux requires a configuration file named `deflux.yml` in the current working directory or in `/etc/deflux.yml`. The
-current directory is preferred over `/etc`.
-
-Use `deflux -config-gen` to create such a file. Deflux tries to discover existing gateways in your network and print
-the config to `stdout`.
+Use `deflux --config-gen` to create the mandatory configuration file.
+Deflux tries to discover existing gateways in your network and prints the config to `stdout`.
 
 ```bash
 deflux --config-gen > deflux.yml
@@ -110,11 +105,13 @@ Edit the file according to your needs. If you want to write to InfluxDB version 
 [InfluxDB v1 configuration](#influx1compat).
 
 When the `fillvalues` functionality is enabled, deflux will write the last reported value of the REST API, if a sensor
-has not reported any new measurement after `fillinterval`. We assume that the sensor is working as long as deCON
+has not reported any new measurement after `fillinterval`. We assume that the sensor is working as long as deCONZ
 reports a `lastseen` time stamp not older than the configured `lastseentimeout`. The config values of `fillinterval` and
 `lastseentimeout` should be set to anything parse-able by Go's [`time.ParseDuration` function](https://pkg.go.dev/time#ParseDuration).
 With `initialfill` set to true, the application writes measurements from the REST API to the database when it starts.
 
+By default, deflux tries to load the config from `deflux.yml` in the current working directory. If the file is not
+present, it tries `/etc/deflux.yml`. You can provide a custom location with the `--config` command line flag.
 
 The default log level of the application is `warning`. You can set the
 `-loglevel=` flag to make it a more verbose:
