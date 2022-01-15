@@ -7,10 +7,11 @@ import (
 	"strconv"
 )
 
+// Event is a common interface for different types of websocket events
 type Event interface {
 	EventName() string
 	Resource() string
-	ResourceId() int
+	ResourceID() int
 	State() interface{}
 }
 
@@ -40,17 +41,17 @@ func (s *SensorEvent) Timeseries() (map[string]string, map[string]interface{}, e
 	return map[string]string{
 			"name":   s.Name,
 			"type":   s.Sensor.Type,
-			"id":     strconv.Itoa(s.Event.ResourceId()),
+			"id":     strconv.Itoa(s.Event.ResourceID()),
 			"source": "websocket"},
 		fields,
 		nil
 }
 
-// DeconzEvent is a message received over the deCONZ websocket
+// WsEvent is a message received over the deCONZ websocket
 // We are only interested in e = 'change' events of resource type r = 'sensor'.
 // Thus we don't implement all fields.
 // See https://dresden-elektronik.github.io/deconz-rest-doc/endpoints/websocket/#message-fields
-type DeconzEvent struct {
+type WsEvent struct {
 	// type should always be 'event'
 	Type string `json:"t"`
 
@@ -66,25 +67,29 @@ type DeconzEvent struct {
 	StateDef interface{}
 }
 
-func (e DeconzEvent) EventName() string {
+// EventName return the name of an event, e.g. "change"
+func (e WsEvent) EventName() string {
 	return e.Event
 }
 
-func (e DeconzEvent) Resource() string {
+// Resource returns the resource type affected by the event, e.g. "sensor"
+func (e WsEvent) Resource() string {
 	return e.ResourceName
 }
 
-func (e DeconzEvent) ResourceId() int {
+// ResourceID returns the unique id of the resource which was affected by the event
+func (e WsEvent) ResourceID() int {
 	return e.ID
 }
 
-func (e DeconzEvent) State() interface{} {
+// State returns the current state of the resource
+func (e WsEvent) State() interface{} {
 	return e.StateDef
 }
 
 // DecodeEvent parses events from bytes
 func DecodeEvent(sp sensor.Provider, b []byte) (Event, error) {
-	var e DeconzEvent
+	var e WsEvent
 	err := json.Unmarshal(b, &e)
 	if err != nil {
 		return nil, fmt.Errorf("unable to unmarshal json: %s", err)

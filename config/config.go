@@ -16,7 +16,7 @@ const YmlFileName = "deflux.yml"
 
 // InfluxDB stores the InfluxDB configuration
 type InfluxDB struct {
-	Url    string
+	URL    string
 	Token  string
 	Org    string
 	Bucket string
@@ -24,7 +24,7 @@ type InfluxDB struct {
 
 // Configuration holds data for Deconz and InfluxDB configuration
 type Configuration struct {
-	Deconz     ApiConfig
+	Deconz     APIConfig
 	InfluxDB   InfluxDB
 	FillValues FillConfig
 }
@@ -128,12 +128,12 @@ func OutputDefaultConfiguration() {
 func defaultConfiguration() *Configuration {
 	// this is the default configuration
 	c := Configuration{
-		Deconz: ApiConfig{
+		Deconz: APIConfig{
 			Addr:   "http://127.0.0.1:8080/",
 			APIKey: "change me",
 		},
 		InfluxDB: InfluxDB{
-			Url:    "http://localhost:8086",
+			URL:    "http://localhost:8086",
 			Token:  "SECRET",
 			Org:    "organization",
 			Bucket: "default",

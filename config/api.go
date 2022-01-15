@@ -8,8 +8,8 @@ import (
 	"path"
 )
 
-// ApiConfig holds properties of the deCONZ API
-type ApiConfig struct {
+// APIConfig holds properties of the deCONZ API
+type APIConfig struct {
 	Addr   string
 	APIKey string
 	WsAddr string
@@ -22,7 +22,7 @@ type config struct {
 
 // DiscoverWebsocket tries to retrieve the websocket address from the deCONZ REST API
 // using the /config endpoint
-func (c *ApiConfig) DiscoverWebsocket() error {
+func (c *APIConfig) DiscoverWebsocket() error {
 	u, err := url.Parse(c.Addr)
 	if err != nil {
 		return fmt.Errorf("unable to discover websocket while parsing config: %s", err)

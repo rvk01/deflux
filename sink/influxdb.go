@@ -8,6 +8,7 @@ import (
 	"time"
 )
 
+// InfluxSink writes data to InfluxDB
 type InfluxSink struct {
 	client influxdb2.Client
 	writer api.WriteAPI
@@ -17,7 +18,7 @@ type InfluxSink struct {
 // The instance needs to be closed with Close()
 func NewInfluxSink(cfg *config.Configuration) *InfluxSink {
 	influxClient := influxdb2.NewClientWithOptions(
-		cfg.InfluxDB.Url,
+		cfg.InfluxDB.URL,
 		cfg.InfluxDB.Token,
 		influxdb2.DefaultOptions().SetBatchSize(20))
 

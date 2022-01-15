@@ -13,6 +13,7 @@ func NewEventError(err error, recoverable bool) EventError {
 	return EventError{err, recoverable}
 }
 
+// Recoverable returns true if the error is not critical and execution should go on
 func (e EventError) Recoverable() bool {
 	return e.recoverable
 }

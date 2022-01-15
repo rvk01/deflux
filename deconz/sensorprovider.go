@@ -19,6 +19,8 @@ type CachingSensorProvider struct {
 
 var sensorProvider *CachingSensorProvider
 
+// NewCachingSensorProvider returns a CachingSensorProvider
+// The CachingSensorProvider is a singleton.
 func NewCachingSensorProvider(api API, updateInterval time.Duration) (*CachingSensorProvider, error) {
 	if sensorProvider != nil {
 		return sensorProvider, nil
@@ -50,6 +52,7 @@ func (c *CachingSensorProvider) Sensor(i int) (*sensor.Sensor, error) {
 	return nil, errors.New("no such sensor")
 }
 
+// Sensors returns all sensors in the cache
 func (c *CachingSensorProvider) Sensors() (*sensor.Sensors, error) {
 	if err := c.populateCache(); err != nil {
 		log.Errorf("failed to update sensor cache: %s", err)

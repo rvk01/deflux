@@ -57,9 +57,9 @@ func runOnce(cfg *config.Configuration) int {
 	influx := sink.NewInfluxSink(cfg)
 	defer influx.Close()
 
-	dApi := deconz.API{Config: cfg.Deconz}
+	dAPI := deconz.API{Config: cfg.Deconz}
 
-	sensors, err := dApi.Sensors()
+	sensors, err := dAPI.Sensors()
 	if err != nil {
 		log.Errorf("Failed to fetch sensors: %s", err)
 		return 1
@@ -89,7 +89,7 @@ func writeSensorState(s sensor.Sensor, influx *sink.InfluxSink, t time.Time, las
 	)
 
 	if last != nil {
-		last[s.Id] = &t
+		last[s.ID] = &t
 	}
 }
 
@@ -99,9 +99,9 @@ func runWebsocket(err error, cfg *config.Configuration) int {
 	signal.Notify(sigsCh, syscall.SIGINT, syscall.SIGTERM)
 
 	// set up input from deCONZ websocket
-	dApi := deconz.API{Config: cfg.Deconz}
+	dAPI := deconz.API{Config: cfg.Deconz}
 	// TODO configurable update interval
-	sensorProvider, err := deconz.NewCachingSensorProvider(dApi, 1*time.Minute)
+	sensorProvider, err := deconz.NewCachingSensorProvider(dAPI, 1*time.Minute)
 
 	if err != nil {
 		log.Errorf("Could not create websocket reader: %s", err)
@@ -109,7 +109,7 @@ func runWebsocket(err error, cfg *config.Configuration) int {
 	}
 
 	// create a new WebsocketEventReader using the websocket connection
-	eventReader, err := deconz.NewWebsocketEventReader(dApi, sensorProvider)
+	eventReader, err := deconz.NewWebsocketEventReader(dAPI, sensorProvider)
 	if err != nil {
 		log.Errorf("Could not create websocket reader: %s", err)
 		return 1
@@ -149,7 +149,7 @@ func runWebsocket(err error, cfg *config.Configuration) int {
 					continue
 				}
 				if s.LastSeen.Add(cfg.FillValues.LastSeenTimeout).Before(now) {
-					log.Warningf("sensor %d last seen %s ago -> assuming it's offline", s.Id, now.Sub(s.LastSeen))
+					log.Warningf("sensor %d last seen %s ago -> assuming it's offline", s.ID, now.Sub(s.LastSeen))
 					continue
 				}
 
@@ -184,7 +184,7 @@ func runWebsocket(err error, cfg *config.Configuration) int {
 					now,
 				)
 
-				lastWrite[sensorEvent.ResourceId()] = &now
+				lastWrite[sensorEvent.ResourceID()] = &now
 
 			case <-ticker.C:
 				if !cfg.FillValues.Enabled {
@@ -207,7 +207,7 @@ func runWebsocket(err error, cfg *config.Configuration) int {
 					}
 
 					if s.LastSeen.Add(cfg.FillValues.LastSeenTimeout).Before(now) {
-						log.Warningf("sensor %d last seen %s ago -> assuming it's offline", s.Id, now.Sub(s.LastSeen))
+						log.Warningf("sensor %d last seen %s ago -> assuming it's offline", s.ID, now.Sub(s.LastSeen))
 						continue
 					}
 

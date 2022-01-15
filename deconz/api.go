@@ -11,7 +11,7 @@ import (
 
 // API represents the deCONZ REST API
 type API struct {
-	Config config.ApiConfig
+	Config config.APIConfig
 
 	// sensorCache is used to look up types of sensors when a new event is received via websocket
 	sensorCache *CachingSensorProvider
@@ -37,10 +37,10 @@ func (a *API) Sensors() (*sensor.Sensors, error) {
 		return nil, fmt.Errorf("unable to decode deCONZ /sensors response: %s", err)
 	}
 
-	for id, _ := range sensors {
+	for id := range sensors {
 		s := sensors[id]
 
-		s.Id = id
+		s.ID = id
 
 		sensors[id] = s
 		log.Debugf("got sensor: %v, state: %v", s, s.StateDef)

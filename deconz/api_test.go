@@ -68,7 +68,7 @@ func TestApiSensors(t *testing.T) {
 	defer ts.Close()
 
 	api := API{
-		Config: config.ApiConfig{
+		Config: config.APIConfig{
 			Addr:   ts.URL,
 			APIKey: "",
 			WsAddr: "",
@@ -94,7 +94,7 @@ func TestApiSensors(t *testing.T) {
 				Pressure: 996,
 			},
 			Config: sensor.Config{Battery: 91},
-			Id:     4,
+			ID:     4,
 		},
 		5: sensor.Sensor{
 			Type:     "ZHAOpenClose",
@@ -107,7 +107,7 @@ func TestApiSensors(t *testing.T) {
 				Open:       false,
 			},
 			Config: sensor.Config{Battery: 0},
-			Id:     5,
+			ID:     5,
 		},
 	}
 
@@ -149,7 +149,7 @@ func TestBatteryTimeSeries(t *testing.T) {
 	defer ts.Close()
 
 	api := API{
-		Config: config.ApiConfig{
+		Config: config.APIConfig{
 			Addr:   ts.URL,
 			APIKey: "",
 			WsAddr: "",
@@ -173,7 +173,7 @@ func TestBatteryTimeSeries(t *testing.T) {
 				State:   sensor.State{Lastupdated: "2021-12-20T06:03:35.854"},
 				Battery: 75,
 			},
-			Id: 1,
+			ID: 1,
 		},
 	}
 

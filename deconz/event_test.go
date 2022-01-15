@@ -347,9 +347,9 @@ func TestBatteryTimeseries(t *testing.T) {
 				State:   sensor.State{Lastupdated: "2021-12-20T06:03:35.854"},
 				Battery: 75,
 			},
-			Id: 1,
+			ID: 1,
 		},
-		Event: DeconzEvent{
+		Event: WsEvent{
 			Type:         "sensor",
 			Event:        "changed",
 			ResourceName: "batterytest",

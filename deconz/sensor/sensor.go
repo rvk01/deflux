@@ -20,12 +20,12 @@ type Provider interface {
 	Sensor(int) (*Sensor, error)
 }
 
-// fielder is an interface that provides fields for InfluxDB
+// Fielder is an interface that provides fields for InfluxDB
 type Fielder interface {
 	Fields() map[string]interface{}
 }
 
-// Timeseries provides tags and fields for the time series database
+// TimeSeries provides tags and fields for the time series database
 type TimeSeries interface {
 	Timeseries() (map[string]string, map[string]interface{}, error)
 }
@@ -38,9 +38,11 @@ type Sensor struct {
 	LastSeen time.Time `json:"lastseen"`
 	StateDef interface{}
 	Config   Config
-	Id       int
+	ID       int
 }
 
+// Config represents the sensor configuration as retrieved from the API
+// Currently, it holds only the battery state.
 type Config struct {
 	// Battery state in percent; not present for all sensors
 	Battery uint32 `json:"battery"`
@@ -56,7 +58,7 @@ type State struct {
 type EmptyState struct{}
 
 // UnmarshalJSON converts a JSON representation of a Sensor into the Sensor struct
-// The auxillary approach is inspired by https://github.com/golang/go/issues/21990
+// The auxiliary approach is inspired by https://github.com/golang/go/issues/21990
 func (s *Sensor) UnmarshalJSON(b []byte) error {
 	var aux struct {
 		Type     string          `json:"type"`
@@ -111,7 +113,7 @@ func (s *Sensor) Timeseries() (map[string]string, map[string]interface{}, error)
 	return map[string]string{
 			"name":   s.Name,
 			"type":   s.Type,
-			"id":     strconv.Itoa(s.Id),
+			"id":     strconv.Itoa(s.ID),
 			"source": "rest"},
 		fields,
 		nil
