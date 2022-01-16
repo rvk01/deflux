@@ -10,9 +10,10 @@ type ZHAAlarm struct {
 
 // Fields implements the fielder interface and returns time series data for InfluxDB
 func (z *ZHAAlarm) Fields() map[string]interface{} {
-	return map[string]interface{}{
-		"lowbattery": z.Lowbattery,
-		"tampered":   z.Tampered,
-		"alarm":      z.Alarm,
-	}
+	return mergeFields(z.State.Fields(),
+		map[string]interface{}{
+			"lowbattery": z.Lowbattery,
+			"tampered":   z.Tampered,
+			"alarm":      z.Alarm,
+		})
 }

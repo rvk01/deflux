@@ -12,8 +12,9 @@ type ZHAAirQuality struct {
 
 // Fields implements the fielder interface and returns time series data for InfluxDB
 func (z *ZHAAirQuality) Fields() map[string]interface{} {
-	return map[string]interface{}{
-		"airquality":    z.Airquality,
-		"airqualityppb": z.AirqualityPPB,
-	}
+	return mergeFields(z.State.Fields(),
+		map[string]interface{}{
+			"airquality":    z.Airquality,
+			"airqualityppb": z.AirqualityPPB,
+		})
 }

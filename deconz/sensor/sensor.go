@@ -214,3 +214,31 @@ func DecodeSensorState(rawState json.RawMessage, sensorType string) (interface{}
 
 	return nil, fmt.Errorf("%s is not a known sensor type", sensorType)
 }
+
+// Fields returns the data age of the state (time.Now() - state.Lastupdated) in seconds
+func (s *State) Fields() map[string]interface{} {
+	if s.Lastupdated != "" {
+		t, err := time.Parse("2006-01-02T15:04:05.999", s.Lastupdated)
+
+		if err != nil {
+			log.Warningf("Failed to unmarshal `lastupdated`: %s", err)
+		} else {
+			return map[string]interface{}{
+				"age_secs": int64(time.Now().Sub(t).Seconds()),
+			}
+		}
+	}
+
+	return map[string]interface{}{}
+}
+
+// mergeFields returns a merged map that contains all entries from p and s.
+// If both map contain a certain key, the value of p takes precedence.
+func mergeFields(p, s map[string]interface{}) map[string]interface{} {
+	for k, e := range s {
+		if _, ok := p[k]; !ok {
+			p[k] = e
+		}
+	}
+	return p
+}

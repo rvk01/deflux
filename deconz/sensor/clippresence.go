@@ -8,7 +8,8 @@ type CLIPPresence struct {
 
 // Fields implements the fielder interface and returns time series data for InfluxDB
 func (z *CLIPPresence) Fields() map[string]interface{} {
-	return map[string]interface{}{
-		"presence": z.Presence,
-	}
+	return mergeFields(z.State.Fields(),
+		map[string]interface{}{
+			"presence": z.Presence,
+		})
 }

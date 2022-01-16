@@ -8,7 +8,8 @@ type ZHAPressure struct {
 
 // Fields implements the fielder interface and returns time series data for InfluxDB
 func (z *ZHAPressure) Fields() map[string]interface{} {
-	return map[string]interface{}{
-		"pressure": z.Pressure,
-	}
+	return mergeFields(z.State.Fields(),
+		map[string]interface{}{
+			"pressure": z.Pressure,
+		})
 }

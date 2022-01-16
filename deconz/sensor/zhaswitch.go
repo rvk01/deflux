@@ -8,7 +8,8 @@ type ZHASwitch struct {
 
 // Fields implements the fielder interface and returns time series data for InfluxDB
 func (z *ZHASwitch) Fields() map[string]interface{} {
-	return map[string]interface{}{
-		"buttonevent": z.Buttonevent,
-	}
+	return mergeFields(z.State.Fields(),
+		map[string]interface{}{
+			"buttonevent": z.Buttonevent,
+		})
 }

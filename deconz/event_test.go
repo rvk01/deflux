@@ -344,7 +344,7 @@ func TestBatteryTimeseries(t *testing.T) {
 			LastSeen: time.Time{},
 			Config:   sensor.Config{Battery: 0},
 			StateDef: &sensor.ZHABattery{
-				State:   sensor.State{Lastupdated: "2021-12-20T06:03:35.854"},
+				State:   sensor.State{Lastupdated: "2021-12-20T06:03:35.000"},
 				Battery: 75,
 			},
 			ID: 1,
@@ -356,12 +356,13 @@ func TestBatteryTimeseries(t *testing.T) {
 			ID:           1,
 			RawState:     nil,
 			StateDef: &sensor.ZHABattery{
-				State:   sensor.State{Lastupdated: "2021-12-20T06:03:35.854"},
+				State:   sensor.State{Lastupdated: "2021-12-20T06:03:35.000"},
 				Battery: 75,
 			},
 		},
 	}
 
+	now := time.Now()
 	tags, fields, err := se.Timeseries()
 
 	if err != nil {
@@ -379,7 +380,10 @@ func TestBatteryTimeseries(t *testing.T) {
 		t.Fatalf("expected: %v, got: %v", wantTags, tags)
 	}
 
-	wantFields := map[string]interface{}{"battery": int16(75)}
+	wantFields := map[string]interface{}{
+		"battery":  int16(75),
+		"age_secs": int64(now.Sub(time.Date(2021, 12, 20, 6, 3, 35, 0, time.UTC)).Seconds()),
+	}
 
 	if !reflect.DeepEqual(wantFields, fields) {
 		t.Fatalf("expected: %v, got: %v", wantFields, fields)

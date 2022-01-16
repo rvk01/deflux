@@ -97,8 +97,6 @@ func DecodeEvent(sp sensor.Provider, b []byte) (Event, error) {
 
 	// We don't decode anything other than sensor events
 	// If there is no state, dont try to parse it
-	// TODO: figure out what to do with these
-	//       some of them seems to be battery updates
 	if e.Resource() != "sensors" || len(e.RawState) == 0 {
 		e.StateDef = &sensor.EmptyState{}
 		return e, nil

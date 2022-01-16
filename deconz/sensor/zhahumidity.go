@@ -8,7 +8,8 @@ type ZHAHumidity struct {
 
 // Fields implements the fielder interface and returns time series data for InfluxDB
 func (z *ZHAHumidity) Fields() map[string]interface{} {
-	return map[string]interface{}{
-		"humidity": float64(z.Humidity) / 100,
-	}
+	return mergeFields(z.State.Fields(),
+		map[string]interface{}{
+			"humidity": float64(z.Humidity) / 100,
+		})
 }

@@ -9,8 +9,9 @@ type ZHAConsumption struct {
 
 // Fields implements the fielder interface and returns time series data for InfluxDB
 func (z *ZHAConsumption) Fields() map[string]interface{} {
-	return map[string]interface{}{
-		"consumption": z.Consumption,
-		"power":       z.Power,
-	}
+	return mergeFields(z.State.Fields(),
+		map[string]interface{}{
+			"consumption": z.Consumption,
+			"power":       z.Power,
+		})
 }

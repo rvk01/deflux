@@ -10,9 +10,10 @@ type ZHACarbonMonoxide struct {
 
 // Fields implements the fielder interface and returns time series data for InfluxDB
 func (z *ZHACarbonMonoxide) Fields() map[string]interface{} {
-	return map[string]interface{}{
-		"CO":         z.Carbonmonoxide,
-		"lowbattery": z.Lowbattery,
-		"tampered":   z.Tampered,
-	}
+	return mergeFields(z.State.Fields(),
+		map[string]interface{}{
+			"CO":         z.Carbonmonoxide,
+			"lowbattery": z.Lowbattery,
+			"tampered":   z.Tampered,
+		})
 }

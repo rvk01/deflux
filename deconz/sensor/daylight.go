@@ -9,8 +9,9 @@ type Daylight struct {
 
 // Fields implements the fielder interface and returns time series data for InfluxDB
 func (z *Daylight) Fields() map[string]interface{} {
-	return map[string]interface{}{
-		"daylight": z.Daylight,
-		"status":   z.Status,
-	}
+	return mergeFields(z.State.Fields(),
+		map[string]interface{}{
+			"daylight": z.Daylight,
+			"status":   z.Status,
+		})
 }
