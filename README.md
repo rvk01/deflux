@@ -232,8 +232,8 @@ Table: keys: [name]
 ```
 
 Here is an example for querying all fields of a measurement type.
-The `map()` is required to convert all values to the same data type (battery is of type `int`, temperature of type
-`float`).
+The `map()` is required to convert all values to the same data type (battery and age_secs are of type `int`, temperature
+of type `float`).
 
 ```
 $ influx query --org YOUR_ORG << EOF
@@ -249,15 +249,17 @@ Result: _result
 Table: keys: [name]
            name:string           _field:string                     _start:time                      _stop:time                      _time:time                  _value:float               id:string     _measurement:string           source:string             type:string
 ----------------------  ----------------------  ------------------------------  ------------------------------  ------------------------------  ----------------------------  ----------------------  ----------------------  ----------------------  ----------------------
-                 th-sz                 battery  2022-01-11T05:32:03.517002170Z  2022-01-11T08:32:03.517002170Z  2022-01-11T08:03:36.015411017Z                            95                       2   deflux_ZHATemperature                    rest          ZHATemperature
-                 th-sz                 battery  2022-01-11T05:32:03.517002170Z  2022-01-11T08:32:03.517002170Z  2022-01-11T08:21:36.014114003Z                            95                       2   deflux_ZHATemperature                    rest          ZHATemperature
-                 th-sz                 battery  2022-01-11T05:32:03.517002170Z  2022-01-11T08:32:03.517002170Z  2022-01-11T05:52:29.048907354Z                            95                       2   deflux_ZHATemperature               websocket          ZHATemperature
-                 th-sz                 battery  2022-01-11T05:32:03.517002170Z  2022-01-11T08:32:03.517002170Z  2022-01-11T05:59:30.841944695Z                            95                       2   deflux_ZHATemperature               websocket          ZHATemperature
-....
-                 th-sz             temperature  2022-01-11T05:32:03.517002170Z  2022-01-11T08:32:03.517002170Z  2022-01-11T08:03:36.015411017Z                         19.53                       2   deflux_ZHATemperature                    rest          ZHATemperature
-                 th-sz             temperature  2022-01-11T05:32:03.517002170Z  2022-01-11T08:32:03.517002170Z  2022-01-11T08:21:36.014114003Z                         19.78                       2   deflux_ZHATemperature                    rest          ZHATemperature
-                 th-sz             temperature  2022-01-11T05:32:03.517002170Z  2022-01-11T08:32:03.517002170Z  2022-01-11T05:52:29.048907354Z                         18.12                       2   deflux_ZHATemperature               websocket          ZHATemperature
-                 th-sz             temperature  2022-01-11T05:32:03.517002170Z  2022-01-11T08:32:03.517002170Z  2022-01-11T05:59:30.841944695Z                         18.12                       2   deflux_ZHATemperature               websocket          ZHATemperature
+                 th-sz                age_secs  2022-01-16T17:32:37.346588227Z  2022-01-16T20:32:37.346588227Z  2022-01-16T20:20:29.572558449Z                           995                       2   deflux_ZHATemperature                    rest          ZHATemperature
+                 th-sz                age_secs  2022-01-16T17:32:37.346588227Z  2022-01-16T20:32:37.346588227Z  2022-01-16T20:31:29.583605370Z                          1655                       2   deflux_ZHATemperature                    rest          ZHATemperature
+                 th-sz                age_secs  2022-01-16T17:32:37.346588227Z  2022-01-16T20:32:37.346588227Z  2022-01-16T20:32:11.106819623Z                             0                       2   deflux_ZHATemperature               websocket          ZHATemperature
+...
+                 th-sz                 battery  2022-01-16T17:32:37.346588227Z  2022-01-16T20:32:37.346588227Z  2022-01-16T19:50:11.497602051Z                            95                       2   deflux_ZHATemperature               websocket          ZHATemperature
+                 th-sz                 battery  2022-01-16T17:32:37.346588227Z  2022-01-16T20:32:37.346588227Z  2022-01-16T20:03:54.585479987Z                            95                       2   deflux_ZHATemperature               websocket          ZHATemperature
+                 th-sz                 battery  2022-01-16T17:32:37.346588227Z  2022-01-16T20:32:37.346588227Z  2022-01-16T20:32:11.106819623Z                            95                       2   deflux_ZHATemperature               websocket          ZHATemperature
+...
+                 th-sz             temperature  2022-01-16T17:32:37.346588227Z  2022-01-16T20:32:37.346588227Z  2022-01-16T19:50:11.497602051Z                         19.08                       2   deflux_ZHATemperature               websocket          ZHATemperature
+                 th-sz             temperature  2022-01-16T17:32:37.346588227Z  2022-01-16T20:32:37.346588227Z  2022-01-16T20:03:54.585479987Z                         18.97                       2   deflux_ZHATemperature               websocket          ZHATemperature
+                 th-sz             temperature  2022-01-16T17:32:37.346588227Z  2022-01-16T20:32:37.346588227Z  2022-01-16T20:32:11.106819623Z                          18.9                       2   deflux_ZHATemperature               websocket          ZHATemperature
 ```
 
 
@@ -305,12 +307,12 @@ Here is an example how to retrieve pressure values:
 
 ```
 > select * from deflux_ZHAPressure;
-time                battery id name  pressure source    type
-----                ------- -- ----  -------- ------    ----
-1641727554442270164 95      4  th-sz 993      rest      ZHAPressure
-1641728526808217267 95      4  th-sz 993      rest      ZHAPressure
-1641729979208970180 95      4  th-sz 994      websocket ZHAPressure
-1641730180633580793 95      4  th-sz 993      websocket ZHAPressure
+time                age_secs battery id name  pressure source    type
+----                -------- ------- -- ----  -------- ------    ----
+1641727554442270164 123      95      4  th-sz 993      rest      ZHAPressure
+1641728526808217267 1095     95      4  th-sz 993      rest      ZHAPressure
+1641729979208970180 0        95      4  th-sz 994      websocket ZHAPressure
+1641730180633580793 0        95      4  th-sz 993      websocket ZHAPressure
 ...
 ```
 
