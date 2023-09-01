@@ -2,3 +2,6 @@ deflux.yml
 deflux
 *.iml
 .idea/
+
+release-*.sh
+README.private.md
