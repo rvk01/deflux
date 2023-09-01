@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/fixje/deflux/config"
 	"github.com/fixje/deflux/deconz/sensor"
-	log "github.com/sirupsen/logrus"
+	"log/slog"
 	"net/http"
 )
 
@@ -43,7 +43,7 @@ func (a *API) Sensors() (*sensor.Sensors, error) {
 		s.ID = id
 
 		sensors[id] = s
-		log.Debugf("got sensor: %v, state: %v", s, s.StateDef)
+		slog.Debug(fmt.Sprintf("got sensor: %v, state: %v", s, s.StateDef))
 	}
 
 	return &sensors, nil

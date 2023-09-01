@@ -3,7 +3,7 @@ package sensor
 import (
 	"encoding/json"
 	"fmt"
-	log "github.com/sirupsen/logrus"
+	"log/slog"
 	"strconv"
 	"time"
 )
@@ -90,7 +90,7 @@ func (s *Sensor) UnmarshalJSON(b []byte) error {
 	if err == nil {
 		s.StateDef = state
 	} else {
-		log.Warnf("unable to decode state: %s", err)
+		slog.Warn("unable to decode state: %s", err)
 		s.StateDef = EmptyState{}
 	}
 
@@ -221,7 +221,7 @@ func (s *State) Fields() map[string]interface{} {
 		t, err := time.Parse("2006-01-02T15:04:05.999", s.Lastupdated)
 
 		if err != nil {
-			log.Warningf("Failed to unmarshal `lastupdated`: %s", err)
+			slog.Warn("Failed to unmarshal `lastupdated`: %s", err)
 		} else {
 			return map[string]interface{}{
 				"age_secs": int64(time.Now().Sub(t).Seconds()),

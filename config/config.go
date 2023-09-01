@@ -2,9 +2,9 @@ package config
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
 	"io/ioutil"
+	"log/slog"
 	"net/url"
 	"os"
 	"path"
@@ -80,7 +80,7 @@ func readConfiguration(file string) ([]byte, error) {
 	pwdPath := path.Join(pwd, YmlFileName)
 	data, pwdErr := ioutil.ReadFile(pwdPath)
 	if pwdErr == nil {
-		log.Infof("Using configuration %s", pwdPath)
+		slog.Info(fmt.Sprintf("Using configuration %s", pwdPath))
 		return data, nil
 	}
 
@@ -91,7 +91,7 @@ func readConfiguration(file string) ([]byte, error) {
 		return nil, fmt.Errorf("\n%s\n%s", pwdErr, etcErr)
 	}
 
-	log.Infof("Using configuration %s", etcPath)
+	slog.Info(fmt.Sprintf("Using configuration %s", etcPath))
 	return data, nil
 }
 
@@ -118,7 +118,8 @@ func OutputDefaultConfiguration() {
 
 	yml, err := yaml.Marshal(c)
 	if err != nil {
-		log.Fatalf("Unable to generate default configuration: %s", err)
+		slog.Error("Unable to generate default configuration: %s", err)
+		os.Exit(1)
 	}
 
 	// to stdout

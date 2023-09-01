@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/fixje/deflux/deconz/sensor"
 	"github.com/gorilla/websocket"
-	log "github.com/sirupsen/logrus"
+	"log/slog"
 	"time"
 )
 
@@ -56,7 +56,7 @@ func (r *WebsocketEventReader) Start(ctx ctx.Context) (<-chan *SensorEvent, erro
 		for {
 			select {
 			case <-r.connCtx.Done():
-				log.Debug("Aborting websocket connection")
+				slog.Debug("Aborting websocket connection")
 				close(out)
 				return
 
@@ -65,7 +65,7 @@ func (r *WebsocketEventReader) Start(ctx ctx.Context) (<-chan *SensorEvent, erro
 				e, err := r.readEvent()
 				if err != nil {
 					if err, ok := err.(EventError); ok && err.Recoverable() {
-						log.Errorf("Dropping event due to error: %s", err)
+						slog.Error("Dropping event due to error: %s", err.error)
 						continue
 					}
 				}
@@ -78,7 +78,7 @@ func (r *WebsocketEventReader) Start(ctx ctx.Context) (<-chan *SensorEvent, erro
 				// we only care about sensor events
 				se, ok := e.(SensorEvent)
 				if !ok {
-					log.Debugf("Dropping non-sensor event type %s", e.Resource())
+					slog.Debug(fmt.Sprintf("Dropping non-sensor event type %s", e.Resource()))
 					continue
 				}
 
@@ -101,7 +101,7 @@ func (r *WebsocketEventReader) connect() {
 	for ; ; <-ticker.C {
 		select {
 		case <-r.connCtx.Done():
-			log.Debug("Aborting websocket connection")
+			slog.Debug("Aborting websocket connection")
 		default:
 
 			if r.SensorProvider == nil {
@@ -117,9 +117,9 @@ func (r *WebsocketEventReader) connect() {
 			r.conn, _, err = websocket.DefaultDialer.DialContext(r.connCtx, r.WebsocketAddr, nil)
 
 			if err != nil {
-				log.Errorf("Error connecting deCONZ websocket: %s\nAttempting reconnect in 10s...", err)
+				slog.Error("Error connecting deCONZ websocket: %s\nAttempting reconnect in 10s...", err)
 			} else {
-				log.Infof("deCONZ websocket connected")
+				slog.Info("deCONZ websocket connected")
 				return
 			}
 		}
@@ -140,7 +140,7 @@ func (r *WebsocketEventReader) readEvent() (Event, error) {
 		return nil, fmt.Errorf("event read error: %s", err)
 	}
 
-	log.Debugf("recv: %s", message)
+	slog.Debug(fmt.Sprintf("recv: %s", message))
 
 	e, err := DecodeEvent(r.SensorProvider, message)
 	if err != nil {
@@ -161,10 +161,10 @@ func (r *WebsocketEventReader) Shutdown(ctx ctx.Context) {
 		if r.conn != nil {
 			err := r.conn.Close()
 			if err != nil {
-				log.Error("Failed to close websocket", err)
+				slog.Error("Failed to close websocket", err)
 				return
 			}
-			log.Infof("deCONZ websocket closed")
+			slog.Info("deCONZ websocket closed")
 		}
 
 		close(done)

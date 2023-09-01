@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/fixje/deflux/deconz/sensor"
-	log "github.com/sirupsen/logrus"
+	"log/slog"
 	"time"
 )
 
@@ -42,7 +42,7 @@ func NewCachingSensorProvider(api API, updateInterval time.Duration) (*CachingSe
 // Sensor returns a sensor for a sensor id
 func (c *CachingSensorProvider) Sensor(i int) (*sensor.Sensor, error) {
 	if err := c.populateCache(); err != nil {
-		log.Errorf("failed to update sensor cache: %s", err)
+		slog.Error("failed to update sensor cache: %s", err)
 	}
 
 	if s, found := (*c.cache)[i]; found {
@@ -55,7 +55,7 @@ func (c *CachingSensorProvider) Sensor(i int) (*sensor.Sensor, error) {
 // Sensors returns all sensors in the cache
 func (c *CachingSensorProvider) Sensors() (*sensor.Sensors, error) {
 	if err := c.populateCache(); err != nil {
-		log.Errorf("failed to update sensor cache: %s", err)
+		slog.Error("failed to update sensor cache: %s", err)
 	}
 
 	return c.cache, nil
@@ -75,7 +75,7 @@ func (c *CachingSensorProvider) populateCache() error {
 	}
 
 	c.nextFetch = now.Add(c.updateInterval)
-	log.Infof("Sensor cache updated, found %d sensors", len((*c.cache)))
+	slog.Info(fmt.Sprintf("Sensor cache updated, found %d sensors", len((*c.cache))))
 
 	return nil
 }
