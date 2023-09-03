@@ -3,7 +3,7 @@ package deconz
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/fixje/deflux/deconz/sensor"
+	"github.com/fixje/deflux/pkg/deconz/sensor"
 	"strconv"
 )
 
@@ -13,6 +13,11 @@ type Event interface {
 	Resource() string
 	ResourceID() int
 	State() interface{}
+}
+
+// Timeserieser returns time series data
+type Timeserieser interface {
+	Timeseries() (map[string]string, map[string]interface{}, error)
 }
 
 // SensorEvent is an Event triggered by a Sensor

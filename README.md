@@ -63,7 +63,7 @@ but lack proper tests:
 - ZHAVibration
 
 If you own such a sensor, it would be nice if you could provide some JSON test data as in
-[this test](deconz/event_test.go). You can retrieve that data either with `debug` logging enabled in deflux, or,
+[this test](pkg/deconz/event_test.go). You can retrieve that data either with `debug` logging enabled in deflux, or,
 using the `/sensors` endpoint of the REST API.
 
 

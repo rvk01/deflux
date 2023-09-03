@@ -2,7 +2,7 @@ package sink
 
 import (
 	"fmt"
-	"github.com/fixje/deflux/config"
+	"github.com/fixje/deflux/pkg/config"
 	influxdb2 "github.com/influxdata/influxdb-client-go/v2"
 	"github.com/influxdata/influxdb-client-go/v2/api"
 	"time"
