@@ -329,7 +329,13 @@ You can cross-compile for Raspberry Pi 4 by setting `GOARCH` and `GOARM`:
 
 ```bash
 GOOS=linux GOARCH=arm GOARM=7 go build -o deflux cmd/deflux/main.go
+```
 
+A pre-commit hook is available to check for linting errors before each commit. You need to install the hook after
+cloning:
+
+```bash
+ln -s ../../githooks/pre-commit .git/hooks/pre-commit
 ```
 
 
