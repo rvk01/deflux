@@ -4,15 +4,15 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/fixje/deflux/deconz/sensor"
-	"github.com/fixje/deflux/sink"
+	"github.com/fixje/deflux/pkg/config"
+	"github.com/fixje/deflux/pkg/deconz"
+	"github.com/fixje/deflux/pkg/deconz/sensor"
+	"github.com/fixje/deflux/pkg/sink"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-	"github.com/fixje/deflux/config"
-	"github.com/fixje/deflux/deconz"
 	"log/slog"
 )
 
@@ -46,7 +46,7 @@ func main() {
 		os.Exit(runOnce(cfg))
 	}
 
-	os.Exit(runWebsocket(err, cfg))
+	os.Exit(runWebsocket(cfg))
 }
 
 // runOnce pulls sensor state from API, writes to InfluxDB and returns the program's exit code.
@@ -63,15 +63,15 @@ func runOnce(cfg *config.Configuration) int {
 		return 1
 	}
 	for _, s := range *sensors {
-		writeSensorState(s, influx, time.Now(), nil)
+		writeSensorState(&s, &s, influx, time.Now(), nil)
 	}
 
 	return 0
 }
 
 // writeSensorState writes a sensor measurement to InfluxDB
-func writeSensorState(s sensor.Sensor, influx *sink.InfluxSink, t time.Time, last map[int]*time.Time) {
-	tags, fields, err := s.Timeseries()
+func writeSensorState(ts deconz.Timeserieser, s *sensor.Sensor, influx *sink.InfluxSink, t time.Time, last map[int]*time.Time) {
+	tags, fields, err := ts.Timeseries()
 	if err != nil {
 		slog.Warn("not adding sensor state to influx: %s", err)
 		return
@@ -92,7 +92,7 @@ func writeSensorState(s sensor.Sensor, influx *sink.InfluxSink, t time.Time, las
 }
 
 // runWebsocket continuously processes events from the deCONZ websocket
-func runWebsocket(err error, cfg *config.Configuration) int {
+func runWebsocket(cfg *config.Configuration) int {
 	sigsCh := make(chan os.Signal, 1)
 	signal.Notify(sigsCh, syscall.SIGINT, syscall.SIGTERM)
 
@@ -151,7 +151,7 @@ func runWebsocket(err error, cfg *config.Configuration) int {
 					continue
 				}
 
-				writeSensorState(s, influx, now, lastWrite)
+				writeSensorState(&s, &s, influx, now, lastWrite)
 			}
 		}
 	}
@@ -165,24 +165,7 @@ func runWebsocket(err error, cfg *config.Configuration) int {
 					continue
 				}
 
-				tags, fields, err := sensorEvent.Timeseries()
-				if err != nil {
-					slog.Warn("not adding event to influx: %s", err)
-					continue
-				}
-
-				slog.Debug("Writing point", "sensor", sensorEvent.Sensor.Type, "tags", tags, "fields", fields)
-
-				now := time.Now()
-
-				influx.Write(
-					fmt.Sprintf("deflux_%s", sensorEvent.Sensor.Type),
-					tags,
-					fields,
-					now,
-				)
-
-				lastWrite[sensorEvent.ResourceID()] = &now
+				writeSensorState(sensorEvent, sensorEvent.Sensor, influx, time.Now(), lastWrite)
 
 			case <-ticker.C:
 				if !cfg.FillValues.Enabled {
@@ -209,7 +192,7 @@ func runWebsocket(err error, cfg *config.Configuration) int {
 						continue
 					}
 
-					writeSensorState(*s, influx, now, lastWrite)
+					writeSensorState(s, s, influx, now, lastWrite)
 				}
 
 			case <-ctx.Done():
