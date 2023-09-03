@@ -319,12 +319,17 @@ time                age_secs battery id name  pressure source    type
 
 ## Development
 
-The software can be built with standard Go tooling (`go build`).
+The software can be built with standard Go tooling:
+
+```bash
+go build -o deflux cmd/deflux/main.go
+```
 
 You can cross-compile for Raspberry Pi 4 by setting `GOARCH` and `GOARM`:
 
 ```bash
-GOOS=linux GOARCH=arm GOARM=7 go build
+GOOS=linux GOARCH=arm GOARM=7 go build -o deflux cmd/deflux/main.go
+
 ```
 
 
