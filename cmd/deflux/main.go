@@ -16,13 +16,7 @@ func main() {
 	flagOnce := flag.Bool("1", false, "write sensor state from REST API once and exit")
 	flag.Parse()
 
-	var logLevel = new(slog.LevelVar)
-	err := logLevel.UnmarshalText([]byte(*flagLoglevel))
-	if err != nil {
-		fmt.Printf("Error parsing log level: %v", err)
-		logLevel.Set(slog.LevelInfo)
-	}
-	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: logLevel})))
+	initLogging(flagLoglevel)
 
 	if *flagConfigGen {
 		config.OutputDefaultConfiguration()
@@ -40,4 +34,15 @@ func main() {
 	}
 
 	os.Exit(deflux.RunWebsocket(cfg))
+}
+
+// initLogging initializes slog
+func initLogging(flagLoglevel *string) {
+	var logLevel = new(slog.LevelVar)
+	err := logLevel.UnmarshalText([]byte(*flagLoglevel))
+	if err != nil {
+		fmt.Printf("Error parsing log level: %v", err)
+		logLevel.Set(slog.LevelWarn)
+	}
+	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{Level: logLevel})))
 }
