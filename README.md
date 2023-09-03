@@ -319,16 +319,12 @@ time                age_secs battery id name  pressure source    type
 
 ## Development
 
-The software can be built with standard Go tooling:
-
-```bash
-go build -o deflux cmd/deflux/main.go
-```
+The software can be built with standard Go tooling (`go build`).
 
 You can cross-compile for Raspberry Pi 4 by setting `GOARCH` and `GOARM`:
 
 ```bash
-GOOS=linux GOARCH=arm GOARM=7 go build -o deflux cmd/deflux/main.go
+GOOS=linux GOARCH=arm GOARM=7 go build
 ```
 
 A pre-commit hook is available to check for linting errors before each commit. You need to install the hook after
