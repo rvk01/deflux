@@ -1,4 +1,4 @@
-module github.com/fixje/deflux
+module github.com/rvk01/deflux
 
 go 1.21
 
