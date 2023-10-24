@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/fixje/deflux/pkg/config"
-	"github.com/fixje/deflux/pkg/deflux"
+	"github.com/rvk01/deflux/pkg/config"
+	"github.com/rvk01/deflux/pkg/deflux"
 	"log/slog"
 	"os"
 )
