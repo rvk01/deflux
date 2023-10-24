@@ -3,8 +3,8 @@ package deconz
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/fixje/deflux/pkg/config"
-	"github.com/fixje/deflux/pkg/deconz/sensor"
+	"github.com/rvk01/deflux/pkg/config"
+	"github.com/rvk01/deflux/pkg/deconz/sensor"
 	"log/slog"
 	"net/http"
 )

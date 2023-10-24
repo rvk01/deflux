@@ -72,7 +72,7 @@ using the `/sensors` endpoint of the REST API.
 Use `go install` to install the application.
 
 ```bash
-go install github.com/fixje/deflux
+go install github.com/rvk01/deflux
 ```
 
 Use `deflux --config-gen` to create the mandatory configuration file.
@@ -118,7 +118,7 @@ The default log level of the application is `warning`. You can set the
 
 ```
 $ ./deflux --loglevel debug
-INFO[2021-12-26T11:29:15+01:00] Using configuration /home/fixje/hacks/deflux/deflux.yml
+INFO[2021-12-26T11:29:15+01:00] Using configuration /home/rvk01/hacks/deflux/deflux.yml
 INFO[2021-12-26T11:29:15+01:00] Connected to deCONZ at http://172.26.0.2:80/api 
 INFO[2021-12-26T11:29:15+01:00] Deconz websocket connected
 ```

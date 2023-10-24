@@ -3,7 +3,7 @@ package deconz
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/fixje/deflux/pkg/deconz/sensor"
+	"github.com/rvk01/deflux/pkg/deconz/sensor"
 	"strconv"
 )
 

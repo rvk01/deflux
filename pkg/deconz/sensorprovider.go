@@ -3,7 +3,7 @@ package deconz
 import (
 	"errors"
 	"fmt"
-	"github.com/fixje/deflux/pkg/deconz/sensor"
+	"github.com/rvk01/deflux/pkg/deconz/sensor"
 	"log/slog"
 	"time"
 )

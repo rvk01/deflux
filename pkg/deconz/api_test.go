@@ -1,8 +1,8 @@
 package deconz
 
 import (
-	"github.com/fixje/deflux/pkg/config"
-	"github.com/fixje/deflux/pkg/deconz/sensor"
+	"github.com/rvk01/deflux/pkg/config"
+	"github.com/rvk01/deflux/pkg/deconz/sensor"
 	"net/http"
 	"net/http/httptest"
 	"reflect"

@@ -2,7 +2,7 @@ package deconz
 
 import (
 	"errors"
-	"github.com/fixje/deflux/pkg/deconz/sensor"
+	"github.com/rvk01/deflux/pkg/deconz/sensor"
 	"os"
 	"reflect"
 	"testing"
